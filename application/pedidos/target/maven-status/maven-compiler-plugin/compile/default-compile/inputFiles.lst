@@ -28,8 +28,11 @@ C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\out\client\SimulatedShippingCalculationAdapter.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\out\persistence\InMemoryOrderRepositoryAdapter.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\AdaptersConfig.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\BusinessMetricsBinder.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ObservabilityConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\OpenApiConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ThreadInfoFilter.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ThreadMetricsBinder.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\UseCaseConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\VirtualThreadConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\PedidosApplication.java

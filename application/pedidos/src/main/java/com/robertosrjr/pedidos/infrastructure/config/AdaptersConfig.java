@@ -4,6 +4,7 @@ import com.robertosrjr.pedidos.application.port.out.CustomerValidationPort;
 import com.robertosrjr.pedidos.application.port.out.ShippingCalculationPort;
 import com.robertosrjr.pedidos.infrastructure.adapter.out.client.SimulatedCustomerValidationAdapter;
 import com.robertosrjr.pedidos.infrastructure.adapter.out.client.SimulatedShippingCalculationAdapter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,12 +24,12 @@ public class AdaptersConfig {
 	private BigDecimal shippingBaseCost;
 
 	@Bean
-	public CustomerValidationPort customerValidationPort() {
-		return new SimulatedCustomerValidationAdapter(customerValidationDelayMs);
+	public CustomerValidationPort customerValidationPort(MeterRegistry meterRegistry) {
+		return new SimulatedCustomerValidationAdapter(customerValidationDelayMs, meterRegistry);
 	}
 
 	@Bean
-	public ShippingCalculationPort shippingCalculationPort() {
-		return new SimulatedShippingCalculationAdapter(shippingCalculationDelayMs, shippingBaseCost);
+	public ShippingCalculationPort shippingCalculationPort(MeterRegistry meterRegistry) {
+		return new SimulatedShippingCalculationAdapter(shippingCalculationDelayMs, shippingBaseCost, meterRegistry);
 	}
 }

@@ -301,12 +301,206 @@ Para adicionar banco de dados real:
 
 ## 📚 Dependências Principais
 
-- **Spring Boot 3.4.0**: Web, Actuator, Validation
-- **springdoc-openapi 2.4.0**: Swagger UI / OpenAPI 3.0
+- **Spring Boot 4.1.1**: Web, Actuator, Validation, OpenTelemetry
+- **springdoc-openapi 2.7.0**: Swagger UI / OpenAPI 3.0
+- **Micrometer Registry Prometheus 1.14.0**: Coleta e exposição de métricas
+- **OpenTelemetry API/SDK 1.41.0**: Tracing distribuído
 - **ArchUnit 1.2.1**: Validação de arquitetura
 - **JUnit 5**: Framework de testes
 - **Mockito 5.7.1**: Mocking
 - **AssertJ 3.25.1**: Asserções fluentes
+
+## 📡 Observabilidade - OpenTelemetry & Prometheus
+
+### 🏗️ Arquitetura de Métricas (MeterBinder Pattern)
+
+As métricas da aplicação seguem o **padrão MeterBinder** recomendado pela skill de métricas do repositório:
+
+```
+ObservabilityConfig
+├── BusinessMetricsBinder (MeterBinder)
+│   ├── orders.created (Counter)
+│   ├── orders.failed (Counter)
+│   ├── orders.total.value (Counter)
+│   ├── orders.by.status (Counter)
+│   ├── orders.create.duration (Timer)
+│   ├── orders.validation.customer.duration (Timer)
+│   └── orders.calculation.shipping.duration (Timer)
+│
+└── ThreadMetricsBinder (MeterBinder)
+    ├── threads.virtual.active (Gauge)
+    └── threads.platform.active (Gauge)
+```
+
+**Benefícios do MeterBinder Pattern:**
+- ✅ Separação de responsabilidades (business vs infrastructure metrics)
+- ✅ Lazy initialization — métricas criadas apenas quando necessárias
+- ✅ Melhor testabilidade — MeterBinders podem ser testados isoladamente
+- ✅ Segue boas práticas recomendadas pelo Micrometer
+- ✅ Evita duplicação de métricas ao reusar `MeterRegistry`
+
+
+
+### 📊 Métricas de Negócio (Business Metrics)
+
+| Métrica | Tipo | Descrição | Valor | Exemplo |
+|---------|------|-----------|-------|---------|
+| **`orders.created`** | Counter | Total de pedidos criados com sucesso | unidade | incrementa 1x por pedido |
+| **`orders.failed`** | Counter | Total de falhas ao criar pedidos | unidade | incrementa 1x por falha |
+| **`orders.total.value`** | Counter | Valor total de receita (em BRL) | currency | incrementa pelo valor do pedido |
+| **`orders.by.status`** | Counter | Total de pedidos por status | unidade | incrementa 1x por transição |
+
+### 📈 Métricas Técnicas (Performance Metrics)
+
+| Métrica | Tipo | Descrição | Percentis | Valor |
+|---------|------|-----------|-----------|-------|
+| **`orders.create.duration`** | Timer | Tempo total para criar um pedido | P50, P95, P99 | milissegundos |
+| **`orders.validation.customer.duration`** | Timer | Latência de validação de cliente (I/O) | P50, P95, P99 | milissegundos |
+| **`orders.calculation.shipping.duration`** | Timer | Latência de cálculo de frete (I/O) | P50, P95, P99 | milissegundos |
+
+### Métricas de Threads
+
+Gauges para monitorar consumo de threads:
+
+- **`threads.virtual.active`**: Número de Virtual Threads ativas
+- **`threads.platform.active`**: Número de Platform Threads ativas
+
+### 🔍 Acessar e Analisar Métricas
+
+**Via Prometheus HTTP endpoint:**
+```bash
+curl http://localhost:8080/actuator/prometheus
+```
+
+**Ou via navegador:** `http://localhost:8080/actuator/prometheus`
+
+**Filtrar métricas de negócio:**
+```bash
+curl http://localhost:8080/actuator/prometheus | grep "orders_"
+```
+
+### 📊 Exemplos de Queries Prometheus
+
+Para usar em um dashboard Prometheus/Grafana:
+
+**Throughput de pedidos (por minuto):**
+```promql
+rate(orders_created_total[1m])
+```
+
+**Receita total acumulada:**
+```promql
+orders_total_value_total
+```
+
+**P95 de latência na criação:**
+```promql
+histogram_quantile(0.95, orders_create_duration_milliseconds_bucket)
+```
+
+**P95 de latência na validação de cliente:**
+```promql
+histogram_quantile(0.95, orders_validation_customer_duration_milliseconds_bucket)
+```
+
+**P95 de latência no cálculo de frete:**
+```promql
+histogram_quantile(0.95, orders_calculation_shipping_duration_milliseconds_bucket)
+```
+
+**Taxa de erro:**
+```promql
+rate(orders_failed_total[1m])
+```
+
+### Acessar Métricas Registradas
+
+Após iniciar a aplicação, todos os MeterBinders são automaticamente descobertos pelo Spring e suas métricas registradas no `MeterRegistry` global.
+
+**Verificar métricas registradas:**
+```bash
+curl http://localhost:8080/actuator/prometheus | grep "orders_"
+```
+
+**Exemplo de saída:**
+```
+# HELP orders_created_total Total orders created successfully
+# TYPE orders_created_total counter
+orders_created_total 5.0
+
+# HELP orders_total_value_total Total value of orders created (business revenue)
+# TYPE orders_total_value_total counter
+orders_total_value_total{currency="BRL"} 12875.0
+
+# HELP orders_create_duration_milliseconds_max Time to create an order
+# TYPE orders_create_duration_milliseconds_max gauge
+orders_create_duration_milliseconds_max{currency="BRL"} 245.0
+```
+
+### Testar Métricas com Script
+
+Um script de teste está disponível para criar múltiplos pedidos e visualizar métricas:
+
+```bash
+./test-metrics.sh
+```
+
+Este script:
+1. Cria 5 pedidos simulados
+2. Extrai métricas relacionadas a pedidos do endpoint `/actuator/prometheus`
+3. Exibe contadores de sucesso/falha e tempos de execução
+
+### OpenTelemetry Tracing
+
+A aplicação inclui suporte a OpenTelemetry para tracing distribuído:
+
+- **Sampling Rate**: 100% (configurável via `management.tracing.sampling.probability`)
+- **Instrumentação**: Captura automática de:
+  - Requisições HTTP
+  - Conexões de banco de dados (quando adicionado)
+  - Spans customizados
+
+### Configuração em `application.yml`
+
+```yaml
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 100% de sampling para desenvolvimento
+  
+  metrics:
+    distribution:
+      percentiles-histogram:
+        orders.create.duration: true
+        http.server.requests: true
+```
+
+Para exportar traces para Jaeger (opcional):
+
+```yaml
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4317  # Jaeger OTLP collector
+```
+
+### Monitoramento em Produção
+
+Para integrar com **Prometheus + Grafana** em produção:
+
+1. **Configurar Prometheus** (`prometheus.yml`):
+   ```yaml
+   scrape_configs:
+     - job_name: 'pedidos-api'
+       static_configs:
+         - targets: ['localhost:8080']
+       metrics_path: '/actuator/prometheus'
+       scrape_interval: 15s
+   ```
+
+2. **Criar Dashboard no Grafana**:
+   - Métrica: `rate(orders_created_total[1m])` para throughput de criação
+   - Métrica: `histogram_quantile(0.95, orders_create_duration_milliseconds_bucket)` para P95 de latência
 
 ## 🎓 Aprendizados e Próximas Etapas
 
@@ -318,16 +512,19 @@ Para adicionar banco de dados real:
 ✅ Pirâmide de testes (unit + integration + architecture)  
 ✅ OpenAPI/Swagger UI  
 ✅ RFC 7807 Problem Details para erros  
+✅ OpenTelemetry para tracing distribuído  
+✅ Prometheus Metrics com contadores e timers customizados  
+✅ Logging estruturado (SLF4J + Logback)  
 
 ### Próximas Etapas (Opcional)
 - [ ] Adicionar banco PostgreSQL real + Testcontainers
-- [ ] Implementar tracing distribuído (OpenTelemetry)
-- [ ] Adicionar logging estruturado (SLF4J + Logback)
-- [ ] Métricas Prometheus/Micrometer
+- [ ] Dashboard Grafana para visualização de métricas
+- [ ] Exportador Jaeger para traces distribuídos
 - [ ] CI/CD (GitHub Actions)
 - [ ] Containerização (Docker)
 - [ ] Load test com wrk/k6 vs jMeter
 - [ ] Benchmarks JMH para comparar VT vs PT
+- [ ] SLA/SLO monitoring
 
 ## 📖 Recursos
 

@@ -10,6 +10,9 @@ import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.request.CreateO
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.request.OrderItemRequest;
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.request.UpdateOrderStatusRequest;
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.response.OrderResponse;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,13 +39,16 @@ public class OrderController {
 	private final GetOrderUseCase getOrderUseCase;
 	private final ListOrdersUseCase listOrdersUseCase;
 	private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
+	private final MeterRegistry meterRegistry;
 
 	public OrderController(CreateOrderUseCase createOrderUseCase, GetOrderUseCase getOrderUseCase,
-			ListOrdersUseCase listOrdersUseCase, UpdateOrderStatusUseCase updateOrderStatusUseCase) {
+			ListOrdersUseCase listOrdersUseCase, UpdateOrderStatusUseCase updateOrderStatusUseCase,
+			MeterRegistry meterRegistry) {
 		this.createOrderUseCase = createOrderUseCase;
 		this.getOrderUseCase = getOrderUseCase;
 		this.listOrdersUseCase = listOrdersUseCase;
 		this.updateOrderStatusUseCase = updateOrderStatusUseCase;
+		this.meterRegistry = meterRegistry;
 	}
 
 	@Operation(
@@ -65,30 +71,44 @@ public class OrderController {
 			threadType, currentThread.threadId(), currentThread.getName());
 		logger.info("Customer: {} | Items: {}", request.customerId(), request.items().size());
 
-		var command = new CreateOrderUseCase.CreateOrderCommand(
-			request.customerId(),
-			request.items().stream()
-				.map(item -> new CreateOrderUseCase.CreateOrderItemCommand(
-					item.productId(),
-					item.productName(),
-					item.quantity(),
-					new Money(item.unitPrice(), item.currency())
-				))
-				.toList()
-		);
+		try {
+			var command = new CreateOrderUseCase.CreateOrderCommand(
+				request.customerId(),
+				request.items().stream()
+					.map(item -> new CreateOrderUseCase.CreateOrderItemCommand(
+						item.productId(),
+						item.productName(),
+						item.quantity(),
+						new Money(item.unitPrice(), item.currency())
+					))
+					.toList()
+			);
 
-		long startTime = System.currentTimeMillis();
-		var order = createOrderUseCase.execute(command);
-		long duration = System.currentTimeMillis() - startTime;
+			long startTime = System.currentTimeMillis();
+			var order = createOrderUseCase.execute(command);
+			long duration = System.currentTimeMillis() - startTime;
 
-		logger.info("✅ Order Created: {} | Duration: {}ms", order.getId(), duration);
-		logger.info("=== END CREATE ORDER ===");
+			// Record metrics using MeterRegistry.find()
+			meterRegistry.timer("orders.create.duration")
+				.record(duration, java.util.concurrent.TimeUnit.MILLISECONDS);
+			meterRegistry.counter("orders.created").increment();
+			meterRegistry.counter("orders.total.value").increment(order.getTotal().amount().doubleValue());
+			meterRegistry.counter("orders.by.status").increment();
 
-		var response = OrderResponse.from(order);
+			logger.info("✅ Order Created: {} | Value: {} | Status: {} | Duration: {}ms | Metrics: OK",
+				order.getId(), order.getTotal().amount(), order.getStatus().name(), duration);
+			logger.info("=== END CREATE ORDER ===");
 
-		return ResponseEntity
-			.created(URI.create("/api/v1/orders/" + order.getId()))
-			.body(response);
+			var response = OrderResponse.from(order);
+
+			return ResponseEntity
+				.created(URI.create("/api/v1/orders/" + order.getId()))
+				.body(response);
+		} catch (Exception e) {
+			meterRegistry.counter("orders.failed").increment();
+			logger.error("❌ Order creation failed: {}", e.getMessage(), e);
+			throw e;
+		}
 	}
 
 	@Operation(
@@ -145,6 +165,11 @@ public class OrderController {
 	) {
 		var command = new UpdateOrderStatusUseCase.UpdateOrderStatusCommand(orderId, request.newStatus());
 		var order = updateOrderStatusUseCase.execute(command);
+
+		// Track status transitions
+		meterRegistry.counter("orders.by.status").increment();
+		logger.info("📊 Order Status Updated: {} | New Status: {}", orderId, order.getStatus());
+
 		return ResponseEntity.ok(OrderResponse.from(order));
 	}
 }

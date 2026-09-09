@@ -22,17 +22,35 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+      base-path: /actuator
   endpoint:
     health:
       probes:
         enabled: true
       show-details: always
+    metrics:
+      enabled: true
   health:
     livenessState:
       enabled: true
     readinessState:
       enabled: true
+
+  # OpenTelemetry Configuration
+  tracing:
+    sampling:
+      probability: 1.0  # Sample 100% of traces (adjust for production)
+
+  # Prometheus Metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${app.environment:dev}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        orders.create.duration: true
 
 logging:
   level:
