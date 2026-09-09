@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(/.claude/skills/architecture-guidance/**)",
+      "Edit(/.claude/skills/code-quality-guidance/**)",
+      "Edit(/.claude/skills/api-design-guidance/**)",
+      "Edit(/.claude/skills/platform-practices-guidance/**)",
+      "Edit(/.claude/skills/testing-strategy-guidance/**)",
+      "Bash(mvn clean *)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:8080/actuator/health\" -UseBasicParsing)",
+      "PowerShell(Get-Process java)",
+      "PowerShell(Stop-Process -Force)",
+      "Read(//c/Developer/Workspace/java/virtualthreads/**)",
+      "Bash(git commit -m ' *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Developer\\Workspace\\java\\virtualthreads\\application\\*"
+    ]
+  }
+}
