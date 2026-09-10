@@ -29,6 +29,11 @@ public class MicrometerToPrometheusCollector extends Collector {
 	public List<MetricFamilySamples> collect() {
 		Map<String, MetricFamilySamples> result = new LinkedHashMap<>();
 
+		int meterCount = meterRegistry.getMeters().size();
+		if (meterCount == 0) {
+			log.warn("⚠️  MeterRegistry is EMPTY! No metrics to collect!");
+		}
+
 		meterRegistry.getMeters().forEach(meter -> {
 			try {
 				Meter.Id id = meter.getId();
@@ -47,6 +52,10 @@ public class MicrometerToPrometheusCollector extends Collector {
 					Counter counter = (Counter) meter;
 					String metricName = baseName + "_total";
 					double value = counter.count();
+
+					if (baseName.contains("orders_total_value")) {
+						log.info("🔍 DEBUG Counter: {} = {}", metricName, value);
+					}
 
 					List<MetricFamilySamples.Sample> samples = new ArrayList<>();
 					samples.add(new MetricFamilySamples.Sample(metricName, labelNames, labelValues, value));
@@ -79,6 +88,9 @@ public class MicrometerToPrometheusCollector extends Collector {
 				log.debug("⚠️  Skipped meter: {}", e.getMessage());
 			}
 		});
+
+		int sampleCount = result.values().stream().mapToInt(f -> f.samples.size()).sum();
+		log.info("📊 Collected {} families with {} samples total", result.size(), sampleCount);
 
 		return new ArrayList<>(result.values());
 	}

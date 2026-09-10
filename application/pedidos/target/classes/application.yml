@@ -78,5 +78,5 @@ app:
   observability:
     pushgateway:
       enabled: true  # Enable push to Prometheus
-      url: http://ec2-15-228-197-194.sa-east-1.compute.amazonaws.com:9091  # Pushgateway URL (ECS)
+      url: http://ec2-56-125-131-185.sa-east-1.compute.amazonaws.com:9091  # Pushgateway URL (ECS)
       push-interval-ms: 20000  # Push every 60 seconds

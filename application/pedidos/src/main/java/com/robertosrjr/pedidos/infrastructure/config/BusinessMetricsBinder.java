@@ -30,27 +30,28 @@ public class BusinessMetricsBinder implements MeterBinder {
 		Counter.builder("orders.total.value")
 			.description("Total value of orders created (business revenue)")
 			.baseUnit("BRL")
-			.tag("currency", "BRL")
 			.register(registry);
-		logger.info("✅ Registered: orders.total.value (currency=BRL)");
+		logger.info("✅ Registered: orders.total.value");
 
 		// Counter: Orders by Status
 		Counter.builder("orders.by.status")
 			.description("Total orders by status (transitions)")
-			.tag("currency", "BRL")
 			.register(registry);
+		logger.info("✅ Registered: orders.by.status");
 
 		// Timer: Order Creation Duration
 		Timer.builder("orders.create.duration")
 			.description("Time to create an order")
 			.publishPercentiles(0.5, 0.95, 0.99)
 			.register(registry);
+		logger.info("✅ Registered: orders.create.duration");
 
 		// Timer: Customer Validation Latency
 		Timer.builder("orders.validation.customer.duration")
 			.description("Time to validate customer (simulated I/O)")
 			.publishPercentiles(0.5, 0.95, 0.99)
 			.register(registry);
+		logger.info("✅ Registered: orders.validation.customer.duration");
 
 		// Timer: Shipping Calculation Latency
 		Timer.builder("orders.calculation.shipping.duration")
