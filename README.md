@@ -13,6 +13,10 @@ Hexagonal (Ports & Adapters) + DDD com 3 módulos Maven:
 - **application**: Casos de uso e portas  
 - **infrastructure**: Adapters web, persistência em memória, integrações simuladas
 
+## 🚀 Roteiro completo de implementação
+
+- 🚀 Roteiro completo de implementação — Passo a passo técnico ([DEPLOYMENT_JOURNEY.md](docs/DEPLOYMENT_JOURNEY.md))
+
 ## 🚀 Como Executar
 
 ### Pré-requisitos
