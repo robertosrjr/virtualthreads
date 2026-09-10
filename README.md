@@ -70,12 +70,12 @@ http://localhost:8080/swagger-ui.html
 
 | Documento | Descrição |
 |-----------|-----------|
-| [DEPLOYMENT_JOURNEY.md](DEPLOYMENT_JOURNEY.md) | 🚀 **Roteiro completo de implementação** — Passo a passo técnico |
-| [METRICS.md](METRICS.md) | 📊 Guia completo de métricas e queries Grafana |
-| [QUICK_START_METRICS.md](QUICK_START_METRICS.md) | ⚡ Como testar métricas localmente |
-| [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) | ✅ Status de implementação |
-| [ARCHITECTURE_DIAGRAM.txt](ARCHITECTURE_DIAGRAM.txt) | 🏗️ Diagrama da arquitetura |
-| [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md) | 📝 Notas técnicas |
+| [DEPLOYMENT_JOURNEY.md](docs/DEPLOYMENT_JOURNEY.md) | 🚀 **Roteiro completo de implementação** — Passo a passo técnico |
+| [METRICS.md](docs/METRICS.md) | 📊 Guia completo de métricas e queries Grafana |
+| [QUICK_START_METRICS.md](docs/QUICK_START_METRICS.md) | ⚡ Como testar métricas localmente |
+| [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | ✅ Status de implementação |
+| [ARCHITECTURE_DIAGRAM.txt](docs/ARCHITECTURE_DIAGRAM.txt) | 🏗️ Diagrama da arquitetura |
+| [IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) | 📝 Notas técnicas |
 
 ## ✅ Implementado
 
