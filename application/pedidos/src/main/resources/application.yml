@@ -42,6 +42,15 @@ management:
     sampling:
       probability: 1.0  # Sample 100% of traces (adjust for production)
 
+  # Disable OTLP exporter (not using Jaeger/Tempo in V1)
+  otlp:
+    metrics:
+      export:
+        enabled: false
+    tracing:
+      export:
+        enabled: false
+
   # Prometheus Metrics
   metrics:
     tags:
@@ -64,3 +73,10 @@ app:
     customer-validation-delay-ms: 150
     shipping-calculation-delay-ms: 200
     shipping-base-cost: 10.00
+
+  # Observability - Prometheus Push Gateway (V1 - Development)
+  observability:
+    pushgateway:
+      enabled: true  # Enable push to Prometheus
+      url: http://ec2-15-228-197-194.sa-east-1.compute.amazonaws.com:9091  # Pushgateway URL (ECS)
+      push-interval-ms: 20000  # Push every 60 seconds

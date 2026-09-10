@@ -11,7 +11,8 @@
       "PowerShell(Get-Process java)",
       "PowerShell(Stop-Process -Force)",
       "Read(//c/Developer/Workspace/java/virtualthreads/**)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(mvn spring-boot:run -f pedidos)"
     ],
     "additionalDirectories": [
       "C:\\Developer\\Workspace\\java\\virtualthreads\\application\\*"

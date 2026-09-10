@@ -29,6 +29,8 @@ C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\out\persistence\InMemoryOrderRepositoryAdapter.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\AdaptersConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\BusinessMetricsBinder.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\JvmAndHttpMetricsBinder.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\MicrometerToPrometheusCollector.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ObservabilityConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\OpenApiConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ThreadInfoFilter.java

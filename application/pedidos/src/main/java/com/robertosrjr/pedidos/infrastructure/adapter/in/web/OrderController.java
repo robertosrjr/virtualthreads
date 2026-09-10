@@ -92,11 +92,13 @@ public class OrderController {
 			meterRegistry.timer("orders.create.duration")
 				.record(duration, java.util.concurrent.TimeUnit.MILLISECONDS);
 			meterRegistry.counter("orders.created").increment();
-			meterRegistry.counter("orders.total.value").increment(order.getTotal().amount().doubleValue());
+			double orderValue = order.getTotal().amount().doubleValue();
+			meterRegistry.counter("orders.total.value").increment(orderValue);
 			meterRegistry.counter("orders.by.status").increment();
 
-			logger.info("✅ Order Created: {} | Value: {} | Status: {} | Duration: {}ms | Metrics: OK",
-				order.getId(), order.getTotal().amount(), order.getStatus().name(), duration);
+			double currentTotal = meterRegistry.counter("orders.total.value").count();
+			logger.info("✅ Order Created: {} | Value: {} | Current Total: {} | Status: {} | Duration: {}ms | Metrics: OK",
+				order.getId(), orderValue, currentTotal, order.getStatus().name(), duration);
 			logger.info("=== END CREATE ORDER ===");
 
 			var response = OrderResponse.from(order);
