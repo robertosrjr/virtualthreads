@@ -2,7 +2,7 @@
 
 ## A Pergunta
 
-Há meses me perguntava: **Virtual Threads realmente servem 10x mais requisições?**
+Há dias me perguntava: **Virtual Threads realmente servem 10x mais requisições?**
 
 A teoria dizia sim. Mas eu queria dados. Dados de verdade.
 

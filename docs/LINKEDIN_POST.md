@@ -6,7 +6,7 @@
 
 🚀 **Virtual Threads: Servindo 10x Mais Requisições com a Mesma Máquina**
 
-Há alguns meses, uma pergunta me atormentava:
+Há alguns dias, uma pergunta me atormentava:
 
 "Virtual Threads são realmente **300% mais escaláveis** ou é só hype?"
 
