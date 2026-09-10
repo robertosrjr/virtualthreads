@@ -685,12 +685,298 @@ R: Quando você tiver operações I/O bloqueantes paralelas (HTTP calls, DB quer
 
 ---
 
+## 🚀 Roadmap v2: DevOps + Alertas Inteligentes
+
+A v1 prova o conceito. A v2 leva para produção de verdade.
+
+### Phase 1: CI/CD Pipeline (3-4 sprints)
+
+```yaml
+GitHub Actions Workflow:
+├── 🔍 Análise Estática
+│   ├─ SonarQube (cobertura de código)
+│   ├─ ArchUnit (validação de arquitetura)
+│   └─ Checkstyle (padrões de código)
+│
+├── 🧪 Testes Automatizados
+│   ├─ Unitários: 70% (domain + app)
+│   ├─ Integração: 25% (adapters)
+│   └─ End-to-end: 5% (com Testcontainers)
+│
+├── 🏗️ Build de Artefatos
+│   ├─ Docker image build
+│   ├─ Push to ECR (AWS)
+│   └─ SBom geração (segurança)
+│
+├── 📊 Scan de Segurança
+│   ├─ Trivy (vulnerabilidades em imagens)
+│   ├─ Snyk (dependências)
+│   └─ SAST (análise de código)
+│
+└── 🚀 Deploy Automático
+    ├─ Dev: Auto-deploy (toda commit)
+    ├─ Staging: Auto-deploy (merge em develop)
+    └─ Prod: Manual approval (merge em main)
+```
+
+**Benefício**: Testes + Deploy em < 5 minutos
+
+### Phase 2: Alertas + Runbooks (2-3 sprints)
+
+```yaml
+Sistema de Alertas Multi-Camada:
+
+┌─────────────────────────────────────────┐
+│ 🔴 CRÍTICO (Dispatch Oncall)            │
+├─────────────────────────────────────────┤
+│ • Taxa erro > 5% por 2 min              │
+│ • Uptime < 95% por 10 min               │
+│ • Aplicação DOWN (health check fail)    │
+│ → Ação: PagerDuty page + Slack          │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ 🟡 AVISO (Notificação)                  │
+├─────────────────────────────────────────┤
+│ • P95 latência > 500ms por 5 min        │
+│ • Taxa de erro 2-5% por 3 min           │
+│ • Virtual Threads > 5000 ativos         │
+│ → Ação: Slack #alerts                   │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ ℹ️ INFO (Registro)                      │
+├─────────────────────────────────────────┤
+│ • Requisições = 0 por 5 min             │
+│ • Heap memory > 80% por 1 min           │
+│ • Garbage collection > 100ms             │
+│ → Ação: CloudWatch Logs                 │
+└─────────────────────────────────────────┘
+```
+
+### Phase 3: Runbooks Automáticos (2 sprints)
+
+```yaml
+Exemplos de Automação:
+
+📘 "Taxa de erro acima de 5%"
+├─ Trigger: Alert > 5% por 2 min
+├─ Ação Automática:
+│  ├─ Screenshot do Grafana
+│  ├─ Logs recentes no CloudWatch
+│  ├─ Status do Jaeger (traces)
+│  ├─ Análise de JVM (GC pauses, heap)
+│  └─ Sugestões: "Rollback?", "Scale up?", "DB issue?"
+└─ Resultado: Oncall tem contexto completo em 30s
+
+📘 "P95 latência > 500ms"
+├─ Trigger: Alert > 500ms por 5 min
+├─ Ação Automática:
+│  ├─ Identifica componente lento (traços)
+│  ├─ Verifica recursos disponíveis
+│  ├─ Sugere scaling
+│  └─ Emite recomendação
+└─ Resultado: Diagnóstico em 1 minuto
+
+📘 "Virtual Threads > 10K"
+├─ Trigger: VT crescimento anômalo
+├─ Ação Automática:
+│  ├─ Verifica se há leak (não encerrando)
+│  ├─ Recomenda upgrade de instance
+│  └─ Escalação automática (se configurado)
+└─ Resultado: Escalabilidade proativa
+```
+
+### Phase 4: Dashboards Avançados (1-2 sprints)
+
+```yaml
+Novos Dashboards:
+
+📊 "Capacity Planning" (Previsão)
+├─ Tendência de requisições/dia
+├─ Projeção: Quando vai atingir 80% capacity?
+├─ Recomendação de scaling
+└─ Custo estimado (FinOps)
+
+📊 "Anomaly Detection"
+├─ Machine Learning em séries temporais
+├─ Detecta padrões anormais (sem regras explícitas)
+├─ Alerta sobre "coisa estranha acontecendo"
+└─ Útil para encontrar problemas novos
+
+📊 "Correlação Negócio ↔ Técnico"
+├─ Ordem criada → latência relacionada
+├─ Pico de vendas → CPU/mem aumenta?
+├─ Ataque DDoS → taxa erro sobe?
+└─ Insight: Qual métrica técnica importa pro business?
+
+📊 "Cost Analysis" (Otimização)
+├─ Custo por requisição
+├─ Custo por unidade de receita
+├─ Oportunidade: Reduzir infra = aumentar lucro
+└─ ROI de Virtual Threads visível
+```
+
+### Phase 4.5: FinOps - Otimização de Custos (1 sprint)
+
+**FinOps é onde observabilidade vira economia real.**
+
+```yaml
+Dashboard FinOps - Custo por Requisição:
+
+📊 Métrica: Custo por Pedido Criado
+├─ Custo EC2: R$ 8/hora
+├─ Requisições/hora: 144.000 (com VT)
+├─ Custo por requisição: R$ 0,000056
+└─ Custo por mil requisições: R$ 0,056
+
+Comparativo PT vs VT:
+┌────────────────────────────────────────┐
+│ Platform Threads                       │
+├────────────────────────────────────────┤
+│ Requisições/hora: 54.000 (60% menos)   │
+│ Custo por req: R$ 0,00015              │
+│ Custo por mil req: R$ 0,15             │
+│ Instâncias necessárias: 3              │
+│ Custo mensal: R$ 18.000                │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│ Virtual Threads                        │
+├────────────────────────────────────────┤
+│ Requisições/hora: 144.000 (baseline)   │
+│ Custo por req: R$ 0,000056             │
+│ Custo por mil req: R$ 0,056            │
+│ Instâncias necessárias: 1              │
+│ Custo mensal: R$ 6.000                 │
+└────────────────────────────────────────┘
+
+💰 Economia Mensal: R$ 12.000 (66% redução)
+```
+
+**Implementação FinOps**:
+
+```yaml
+1. Tracking de Custos AWS
+   ├─ Cost Allocation Tags
+   │  ├─ app=pedidos
+   │  ├─ env=prod
+   │  ├─ team=backend
+   │  └─ cost-center=eng
+   │
+   ├─ Cloudwatch Metrics
+   │  ├─ EC2 usage hours
+   │  ├─ Network transfer
+   │  ├─ Storage costs
+   │  └─ Data transfer
+   │
+   └─ Billing API Integration
+      ├─ Custo real vs orçado
+      ├─ Alertas se > 10% do orçado
+      └─ Forecast para fim de mês
+
+2. Análise de Custo por Componente
+   ├─ Custo do Prometheus: R$ 200/mês
+   ├─ Custo do Grafana: R$ 0 (open-source)
+   ├─ Custo do Jaeger: R$ 100/mês
+   ├─ Custo da App (EC2): R$ 6.000/mês
+   └─ Custo Total: R$ 6.300/mês
+
+3. Oportunidades de Otimização
+   ├─ Reserved Instances: -40% (contratar 12 meses)
+   ├─ Spot Instances: -70% (staging/dev)
+   ├─ Right-sizing: Reduzir instância se não usar
+   ├─ Auto-scaling: Scale down em off-peak
+   └─ Data transfer: Usar CloudFront cache
+
+4. Dashboard FinOps Executivo
+   ├─ Gasto Hoje: R$ 210
+   ├─ Gasto Este Mês (projetado): R$ 6.300
+   ├─ Orçamento: R$ 7.000
+   ├─ Status: ✅ OK (90% do orçado)
+   ├─ Economia vs PT: R$ 12.000/mês
+   └─ ROI de Virtual Threads: 5x em 3 meses
+```
+
+**Conectar FinOps a Observabilidade**:
+
+```yaml
+Métrica Técnica                 → Métrica de Custo
+────────────────────────────────────────────────
+CPU > 80% por 10 min           → Escalar (custo +5%)
+Requisições +200%              → Escalar (necessário)
+Latência P95 > 500ms           → Problema no código (invest em fix)
+Virtual Threads > 8000         → Risco de memory leak (diagnosticar)
+Database queries +300%         → Otimizar (cache/índices)
+
+Exemplo Real:
+├─ Alerta: "P95 latência > 600ms"
+├─ Diagnóstico: "Query de DB lenta"
+├─ Ação 1: Scale temporário (+R$ 500 custo extra esse dia)
+├─ Ação 2: Otimizar query (1-2 horas dev)
+├─ Resultado: Volta ao normal (-R$ 500/dia economia)
+└─ ROI: 1-2 dias de dev = 1 ano de economia!
+```
+
+---
+
+### Phase 5: Escalabilidade Automática (1-2 sprints)
+
+```yaml
+Auto-Scaling Inteligente:
+
+Regra 1: Baseada em Métrica Técnica
+├─ Se P95 latência > 400ms por 5 min
+├─ E CPU < 60% (temos recurso)
+└─ Então: Scale-up automático (mais replicas)
+
+Regra 2: Baseada em Métrica de Negócio
+├─ Se requisições/min > 80% do capacity
+├─ E forecast indica pico em T+2h
+└─ Então: Pré-scale (escala antes do pico)
+
+Regra 3: Baseada em Custo
+├─ Se custo/hora > orçamento previsto
+├─ E taxa erro < 0.1% (qualidade OK)
+└─ Então: Scale-down automático (economizar)
+```
+
+---
+
+## 💰 ROI Estimado (v2)
+
+Depois de implementar v2, espera-se:
+
+| Métrica | v1 | v2 | Ganho |
+|---------|----|----|-------|
+| **MTTR** (tempo para resolver) | 15-20 min | 2-3 min | 87% ↓ |
+| **MTTF** (tempo entre falhas) | 24-48h | > 7 dias | 300% ↑ |
+| **Custo de infra** | R$ 10K/mês | R$ 6K/mês | 40% ↓ |
+| **Taxa de erro** | 0.3% | < 0.05% | 85% ↓ |
+| **Capacity** | 1000 req/s | 5000 req/s | 5x |
+
+---
+
+## 🎓 Aprendizado DevOps
+
+A lição aqui é: **Observabilidade sem automação é apenas visual**.
+
+- v1: Você VÊ o problema (Grafana)
+- v2: O sistema RESOLVE o problema (CI/CD + Alertas)
+
+Esse é o caminho para SRE de verdade: **Toil reduction** + **Reliability**.
+
+---
+
 ## 📚 Referências
 
 - [JEP 444 - Virtual Threads](https://openjdk.org/jeps/444)
 - [Spring Boot 3.4+ Virtual Threads Support](https://spring.io/blog/2024/01/31/hello-virtual-threads)
 - [Micrometer Metrics](https://micrometer.io/)
 - [OpenTelemetry](https://opentelemetry.io/)
+- [GitHub Actions Best Practices](https://docs.github.com/en/actions)
+- [PagerDuty Incident Response](https://www.pagerduty.com/)
+- [AWS Auto Scaling](https://docs.aws.amazon.com/autoscaling/)
 
 ---
 
