@@ -70,6 +70,7 @@ http://localhost:8080/swagger-ui.html
 
 | Documento | Descrição |
 |-----------|-----------|
+| [DEPLOYMENT_JOURNEY.md](DEPLOYMENT_JOURNEY.md) | 🚀 **Roteiro completo de implementação** — Passo a passo técnico |
 | [METRICS.md](METRICS.md) | 📊 Guia completo de métricas e queries Grafana |
 | [QUICK_START_METRICS.md](QUICK_START_METRICS.md) | ⚡ Como testar métricas localmente |
 | [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) | ✅ Status de implementação |
