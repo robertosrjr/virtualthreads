@@ -41,15 +41,9 @@ management:
   tracing:
     sampling:
       probability: 1.0  # Sample 100% of traces (adjust for production)
-
-  # Disable OTLP exporter (not using Jaeger/Tempo in V1)
-  otlp:
-    metrics:
-      export:
-        enabled: false
-    tracing:
-      export:
-        enabled: false
+    export:
+      otlp:
+        enabled: false  # Disable OTLP exporter (not using Jaeger/Tempo in V1)
 
   # Prometheus Metrics
   metrics:

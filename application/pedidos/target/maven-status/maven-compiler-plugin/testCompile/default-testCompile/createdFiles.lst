@@ -1,5 +1,3 @@
-com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$CreateOrderValidation.class
-com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$TestMeterRegistryConfig.class
-com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$MalformedJsonHandling.class
-com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest.class
-com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$OrderItemValidation.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\validation\CurrencyCodeValidatorTest$InvalidCurrencies.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\validation\CurrencyCodeValidatorTest$ValidCurrencies.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\validation\CurrencyCodeValidatorTest.class
