@@ -27,4 +27,4 @@ Use this skill for privacy-by-design review of code, telemetry, deployment, back
 
 ## Reference
 
-See `lgpd-sre-compliance-skill.md` for the detailed audit workflow and examples.
+See `references/lgpd-sre-compliance-skill.md` for the detailed audit workflow and examples.

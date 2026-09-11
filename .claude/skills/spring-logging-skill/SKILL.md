@@ -26,4 +26,4 @@ Use this skill for application log design and implementation in Java/Spring. Pre
 
 ## Reference
 
-See `spring-logging-skill.md` for extended examples and review guidance.
+See `references/spring-logging-skill.md` for extended examples and review guidance.

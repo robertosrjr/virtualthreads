@@ -19,11 +19,14 @@ C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\request\CreateOrderRequest.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\request\OrderItemRequest.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\request\UpdateOrderStatusRequest.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\response\error\ValidationError.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\response\MoneyResponse.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\response\OrderItemResponse.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\dto\response\OrderResponse.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\GlobalExceptionHandler.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderController.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\validation\CurrencyCodeValidator.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\in\web\validation\ValidCurrencyCode.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\out\client\SimulatedCustomerValidationAdapter.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\out\client\SimulatedShippingCalculationAdapter.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\adapter\out\persistence\InMemoryOrderRepositoryAdapter.java

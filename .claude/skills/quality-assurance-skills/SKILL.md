@@ -26,4 +26,4 @@ Use this skill to act as a modern, strategic QA engineer: balance the Agile Test
 
 ## Reference
 
-See `quality-assurance-skills.md` for the full Agile Testing Quadrants breakdown and behavioral (soft-skill) guidance.
+See `references/quality-assurance-skills.md` for the full Agile Testing Quadrants breakdown and behavioral (soft-skill) guidance.

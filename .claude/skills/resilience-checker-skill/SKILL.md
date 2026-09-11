@@ -28,4 +28,4 @@ Use this skill to identify failure boundaries and apply only the resilience patt
 
 ## Reference
 
-See `resilience-checker-skill.md` for pattern details and chaos-validation guidance.
+See `references/resilience-checker-skill.md` for pattern details and chaos-validation guidance.

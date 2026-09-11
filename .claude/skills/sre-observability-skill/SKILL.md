@@ -27,4 +27,4 @@ Use this skill as the coordinating review for logs, metrics, traces, and operati
 
 ## Reference
 
-See `sre-observability-skill.md` for the detailed SRE review framework.
+See `references/sre-observability-skill.md` for the detailed SRE review framework.

@@ -27,4 +27,4 @@ Use this skill for Micrometer and Spring Boot Actuator instrumentation. Define m
 
 ## Reference
 
-See `spring-metrics-skill.md` for extended Micrometer examples.
+See `references/spring-metrics-skill.md` for extended Micrometer examples.

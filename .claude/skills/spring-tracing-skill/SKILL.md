@@ -27,4 +27,4 @@ Use this skill for distributed tracing and operation spans. Prefer Micrometer Ob
 
 ## Reference
 
-See `spring-tracing-skill.md` for extended Observation and OTLP examples.
+See `references/spring-tracing-skill.md` for extended Observation and OTLP examples.

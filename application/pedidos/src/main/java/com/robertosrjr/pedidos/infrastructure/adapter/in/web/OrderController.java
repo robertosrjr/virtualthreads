@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -32,6 +33,7 @@ import java.util.UUID;
 @Tag(name = "Orders", description = "Order management endpoints")
 @RestController
 @RequestMapping("/api/v1/orders")
+@Validated
 public class OrderController {
 	private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 

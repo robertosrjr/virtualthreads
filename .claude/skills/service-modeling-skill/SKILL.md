@@ -25,4 +25,4 @@ Use this skill to model and differentiate Business Services from Service Offers 
 
 ## Reference
 
-See `service-modeling-skill.md` for the full TOGAF conceptual grounding and output template.
+See `references/service-modeling-skill.md` for the full TOGAF conceptual grounding and output template.

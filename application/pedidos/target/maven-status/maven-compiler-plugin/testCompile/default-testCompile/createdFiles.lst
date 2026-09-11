@@ -1,0 +1,5 @@
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$CreateOrderValidation.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$TestMeterRegistryConfig.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$MalformedJsonHandling.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest.class
+com\robertosrjr\pedidos\infrastructure\adapter\in\web\OrderControllerValidationTest$OrderItemValidation.class
