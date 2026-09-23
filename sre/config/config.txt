@@ -1,0 +1,5 @@
+Locate
+C:\Developer\Key\ParChavesEC2Putty.ppk
+
+Connect to your instance using its Public DNS
+ssh -i "ParChavesEC2Putty.pem" ubuntu@ec2-54-232-1-143.sa-east-1.compute.amazonaws.com

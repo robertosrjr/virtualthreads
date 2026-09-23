@@ -38,6 +38,7 @@ C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\OpenApiConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ThreadInfoFilter.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\ThreadMetricsBinder.java
+C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\TracingConfiguration.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\UseCaseConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\config\VirtualThreadConfig.java
 C:\Developer\Workspace\java\virtualthreads\application\pedidos\src\main\java\com\robertosrjr\pedidos\infrastructure\PedidosApplication.java

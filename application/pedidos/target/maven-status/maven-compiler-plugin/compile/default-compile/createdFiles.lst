@@ -25,6 +25,7 @@ com\robertosrjr\pedidos\infrastructure\adapter\in\web\validation\ValidCurrencyCo
 com\robertosrjr\pedidos\application\port\in\ListOrdersUseCase$ListOrdersCommand.class
 com\robertosrjr\pedidos\application\port\in\CreateOrderUseCase$CreateOrderCommand.class
 com\robertosrjr\pedidos\application\port\in\UpdateOrderStatusUseCase.class
+com\robertosrjr\pedidos\infrastructure\config\TracingConfiguration.class
 com\robertosrjr\pedidos\application\port\out\OrderRepositoryPort$OrderFilter.class
 com\robertosrjr\pedidos\infrastructure\config\UseCaseConfig.class
 com\robertosrjr\pedidos\application\usecase\GetOrderUseCaseImpl.class

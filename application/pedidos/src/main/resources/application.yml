@@ -22,7 +22,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,env
       base-path: /actuator
   endpoint:
     health:
@@ -37,13 +37,24 @@ management:
     readinessState:
       enabled: true
 
-  # OpenTelemetry Configuration
+  # OpenTelemetry / Jaeger Tracing
   tracing:
     sampling:
-      probability: 1.0  # Sample 100% of traces (adjust for production)
+      probability: 1.0  # Sample 100% of traces (adjust for production: 0.1 = 10%)
+    propagation:
+      type: w3c  # W3C Trace Context for interoperability
     export:
       otlp:
-        enabled: false  # Disable OTLP exporter (not using Jaeger/Tempo in V1)
+        enabled: true  # Enable OTLP exporter to Jaeger
+        endpoint: http://ec2-54-232-1-143.sa-east-1.compute.amazonaws.com:4318/v1/traces  # Jaeger OTLP HTTP
+        headers:
+          Authorization: ""  # Add if Jaeger requires auth
+    observations:
+      http:
+        server:
+          enabled: true  # Trace incoming HTTP requests
+        client:
+          enabled: true  # Trace outgoing HTTP calls
 
   # Prometheus Metrics
   metrics:
@@ -59,8 +70,10 @@ logging:
   level:
     root: INFO
     com.robertosrjr.pedidos: DEBUG
+    io.opentelemetry: WARN  # Suppress verbose OTel logs
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    # Include trace ID and span ID for correlation with Jaeger
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{traceId}/%X{spanId}] %-5level %logger{36} - %msg%n"
 
 app:
   simulation:
@@ -72,5 +85,5 @@ app:
   observability:
     pushgateway:
       enabled: true  # Enable push to Prometheus
-      url: http://ec2-56-125-131-185.sa-east-1.compute.amazonaws.com:9091  # Pushgateway URL (ECS)
+      url: http://ec2-54-232-1-143.sa-east-1.compute.amazonaws.com:9091  # Pushgateway URL (ECS)
       push-interval-ms: 20000  # Push every 60 seconds
