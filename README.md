@@ -70,6 +70,30 @@ http://localhost:8080/swagger-ui.html
 
 📄 **Guia completo de métricas**: [METRICS.md](METRICS.md)
 
+## 🤖 Governança de IA no Pull Request
+
+Todo PR passa pelo workflow **AI Governance Pipeline** ([ai-governance.yml](.github/workflows/ai-governance.yml)). Ele executa os agentes de [`.claude/agents/`](.claude/agents/) sobre o diff usando o Gemini e **bloqueia o merge** quando encontra uma violação `CRITICAL`.
+
+| Agente | O que bloqueia |
+|--------|----------------|
+| `architecture-auditor` | `domain`/`application` dependendo de `infrastructure` ou de frameworks |
+| `code-quality-auditor` | Violações de regras invioláveis (SOLID, Clean Code) |
+| `lgpd-sre-compliance` | Dado pessoal ou credencial em logs, traces, métricas, código ou configuração |
+
+- **Arquivos analisados**: `*.java`, `*.gradle`, `*.kts`, `pom.xml`, `*.yml`, `*.yaml`, `*.properties`, `logback*.xml`
+- **Resultado**: comentário no PR, Job Summary do Actions e check `ai-review` (✅/❌)
+- **Fail-closed**: se um agente falhar (API, modelo, cota), o PR é bloqueado
+
+### Configuração
+
+| Item | Onde | Obrigatório |
+|------|------|-------------|
+| `GEMINI_API_KEY` | Settings → Secrets and variables → Actions → **Repository secrets** | Sim |
+| `GEMINI_MODEL` | Settings → Secrets and variables → Actions → **Variables** | Não (padrão definido no [orchestrator.py](.github/scripts/orchestrator.py)) |
+| Check `ai-review` obrigatório | Settings → Rules → Rulesets (branch `main`) | Sim, para bloquear o merge |
+
+📄 **Decisão e trade-offs**: [ADR-001](docs/adr/ADR-001-pipeline-governanca-ia.md)
+
 ## 📚 Documentação
 
 | Documento | Descrição |
@@ -80,6 +104,7 @@ http://localhost:8080/swagger-ui.html
 | [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | ✅ Status de implementação |
 | [ARCHITECTURE_DIAGRAM.txt](docs/ARCHITECTURE_DIAGRAM.txt) | 🏗️ Diagrama da arquitetura |
 | [IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) | 📝 Notas técnicas |
+| [ADR-001](docs/adr/ADR-001-pipeline-governanca-ia.md) | 🤖 Pipeline de Governança de IA para revisão de PRs |
 
 ## ✅ Implementado
 
@@ -91,6 +116,7 @@ http://localhost:8080/swagger-ui.html
 - Métricas Prometheus (MeterBinder pattern)
 - OpenTelemetry para tracing
 - Logging estruturado
+- Governança de IA no PR (arquitetura, qualidade e LGPD) via GitHub Actions
 
 ## 👨‍💻 Autor
 
