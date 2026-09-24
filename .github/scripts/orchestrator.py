@@ -13,14 +13,19 @@ import subprocess
 import sys
 import time
 import urllib.request
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass, field
+from fnmatch import fnmatch
 from pathlib import Path
 
 from google import genai
 from google.genai import types
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(
+    level=logging.INFO, stream=sys.stdout, format="%(asctime)s %(levelname)-7s %(message)s"
+)
 logger = logging.getLogger("ai-governance")
 
 AGENTS_DIR = Path(".claude/agents")
@@ -28,7 +33,9 @@ AGENTS = ("architecture-auditor", "code-quality-auditor")
 DIFF_PATHS = ("*.java", "*.gradle", "*.kts", "pom.xml")
 MAX_DIFF_CHARS = 200_000
 MAX_ATTEMPTS = 3
+MAX_ERROR_CHARS = 300
 BLOCKING_SEVERITIES = {"CRITICAL"}
+SEVERITIES = ("CRITICAL", "MAJOR", "MINOR")
 COMMENT_MARKER = "<!-- ai-governance-review -->"
 GITHUB_API = "https://api.github.com"
 
@@ -56,7 +63,7 @@ RESPONSE_SCHEMA = {
             "items": {
                 "type": "OBJECT",
                 "properties": {
-                    "severity": {"type": "STRING", "enum": ["CRITICAL", "MAJOR", "MINOR"]},
+                    "severity": {"type": "STRING", "enum": list(SEVERITIES)},
                     "file": {"type": "STRING"},
                     "line": {"type": "INTEGER"},
                     "rule": {"type": "STRING"},
@@ -69,16 +76,47 @@ RESPONSE_SCHEMA = {
     "required": ["summary", "findings"],
 }
 
+
 @dataclass
 class AgentResult:
     agent: str
     summary: str = ""
     findings: list = field(default_factory=list)
     error: str = ""
+    duration_s: float = 0.0
 
     @property
     def blocking_findings(self):
         return [f for f in self.findings if f.get("severity") in BLOCKING_SEVERITIES]
+
+    @property
+    def status(self):
+        if self.error:
+            return "ERRO"
+        return "BLOQUEADO" if self.blocking_findings else "OK"
+
+
+# ---------------------------------------------------------------- logging
+
+
+@contextmanager
+def log_group(title):
+    """Agrupa linhas no log do GitHub Actions (seção recolhível)."""
+    print(f"::group::{title}", flush=True)
+    try:
+        yield
+    finally:
+        print("::endgroup::", flush=True)
+
+
+def severity_counts(findings):
+    counts = Counter(f.get("severity", "?") for f in findings)
+    return " ".join(f"{s}={counts.get(s, 0)}" for s in SEVERITIES)
+
+
+def short_error(exc):
+    return f"{type(exc).__name__}: {str(exc)[:MAX_ERROR_CHARS]}"
+
 
 def require_env(name):
     value = os.environ.get(name, "").strip()
@@ -87,15 +125,53 @@ def require_env(name):
         sys.exit(2)
     return value
 
+
+def log_configuration(model):
+    logger.info("Repositório=%s PR=#%s base=%s",
+                os.environ.get("GITHUB_REPOSITORY", "?"),
+                os.environ.get("PR_NUMBER", "?"), os.environ.get("BASE_REF", "?"))
+    logger.info("Modelo=%s tentativas_max=%d", model, MAX_ATTEMPTS)
+    logger.info("Agentes configurados (%d): %s", len(AGENTS), ", ".join(AGENTS))
+    logger.info("Filtro de arquivos: %s", ", ".join(DIFF_PATHS))
+    logger.info("Severidades que bloqueiam: %s", ", ".join(sorted(BLOCKING_SEVERITIES)))
+
+
 # ---------------------------------------------------------------- diff
 
-def collect_diff(base_ref):
-    command = ["git", "diff", "--unified=5", f"origin/{base_ref}...HEAD", "--", *DIFF_PATHS]
-    diff = subprocess.run(command, capture_output=True, text=True, check=True).stdout
+
+def run_git(*args):
+    try:
+        return subprocess.run(["git", *args], capture_output=True, text=True, check=True).stdout
+    except subprocess.CalledProcessError as exc:
+        logger.error("Falha no comando git %s: %s", " ".join(args), exc.stderr.strip())
+        sys.exit(2)
+
+
+def is_relevant(path):
+    return any(fnmatch(Path(path).name, pattern) for pattern in DIFF_PATHS)
+
+
+def log_changed_files(base_ref):
+    changed = run_git("diff", "--name-only", f"origin/{base_ref}...HEAD").split()
+    relevant = [path for path in changed if is_relevant(path)]
+    logger.info("Arquivos alterados no PR: %d (analisados: %d, ignorados: %d)",
+                len(changed), len(relevant), len(changed) - len(relevant))
+    for path in relevant:
+        logger.info("  [analisado] %s", path)
+    if not relevant:
+        for path in changed:
+            logger.info("  [ignorado]  %s", path)
+    return relevant
+
+
+def collect_diff(base_ref, paths):
+    diff = run_git("diff", "--unified=5", f"origin/{base_ref}...HEAD", "--", *paths)
+    logger.info("Tamanho do diff enviado aos agentes: %d caracteres", len(diff))
     if len(diff) > MAX_DIFF_CHARS:
         logger.warning("Diff truncado de %d para %d caracteres", len(diff), MAX_DIFF_CHARS)
         diff = diff[:MAX_DIFF_CHARS] + "\n[... diff truncado ...]"
     return diff
+
 
 def wrap_untrusted(diff):
     neutralized = diff.replace("</pr_diff>", "&lt;/pr_diff&gt;")
@@ -104,12 +180,16 @@ def wrap_untrusted(diff):
 
 # ---------------------------------------------------------------- agentes
 
+
 def load_agent_prompt(agent):
-    content = (AGENTS_DIR / f"{agent}.md").read_text(encoding="utf-8")
+    path = AGENTS_DIR / f"{agent}.md"
+    content = path.read_text(encoding="utf-8")
     without_frontmatter = re.sub(r"\A---\n.*?\n---\n", "", content, flags=re.DOTALL)
+    logger.info("[%s] Prompt carregado de %s (%d caracteres)", agent, path, len(without_frontmatter))
     return without_frontmatter.strip() + "\n" + OUTPUT_CONTRACT
 
-def call_gemini(client, model, system_prompt, user_content):
+
+def call_gemini(client, model, agent, system_prompt, user_content):
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
         response_mime_type="application/json",
@@ -118,38 +198,57 @@ def call_gemini(client, model, system_prompt, user_content):
     )
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
+            logger.info("[%s] Chamando Gemini (tentativa %d/%d)", agent, attempt, MAX_ATTEMPTS)
             response = client.models.generate_content(
                 model=model, contents=user_content, config=config
             )
             return json.loads(response.text)
         except Exception as exc:  # noqa: BLE001 - SDK lança tipos variados
+            logger.warning("[%s] Tentativa %d falhou: %s", agent, attempt, short_error(exc))
             if attempt == MAX_ATTEMPTS:
                 raise
-            logger.warning("Tentativa %d falhou (%s); nova tentativa", attempt, type(exc).__name__)
             time.sleep(2**attempt)
 
+
+def log_agent_result(result):
+    logger.info("[%s] Concluído em %.1fs: %d achados (%s) -> %s", result.agent,
+                result.duration_s, len(result.findings), severity_counts(result.findings),
+                result.status)
+    for finding in result.findings:
+        logger.info("[%s]   %-8s %s:%s %s", result.agent, finding.get("severity"),
+                    finding.get("file"), finding.get("line", "?"), finding.get("rule"))
+
+
 def run_agent(client, model, agent, diff):
+    logger.info("[%s] Iniciando", agent)
+    started = time.monotonic()
     try:
-        payload = call_gemini(client, model, load_agent_prompt(agent), wrap_untrusted(diff))
+        prompt = load_agent_prompt(agent)
+        payload = call_gemini(client, model, agent, prompt, wrap_untrusted(diff))
         result = AgentResult(agent, payload.get("summary", ""), payload.get("findings", []))
-        logger.info("Agente %s concluído: %d achados", agent, len(result.findings))
-        return result
     except Exception as exc:  # noqa: BLE001 - falha de um agente não derruba o outro
-        logger.error("Agente %s falhou: %s", agent, type(exc).__name__)
-        return AgentResult(agent, error=type(exc).__name__)
+        logger.error("[%s] Falhou: %s", agent, short_error(exc))
+        result = AgentResult(agent, error=type(exc).__name__)
+    result.duration_s = time.monotonic() - started
+    log_agent_result(result)
+    return result
+
 
 def run_agents(client, model, diff):
     with ThreadPoolExecutor(max_workers=len(AGENTS)) as pool:
         futures = [pool.submit(run_agent, client, model, agent, diff) for agent in AGENTS]
         return [future.result() for future in futures]
 
+
 # ---------------------------------------------------------------- relatório
+
 
 def sanitize(text):
     """Remove imagens/links (vetor de exfiltração) e escapa HTML e pipes de tabela."""
     text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "[imagem removida]", str(text))
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
     return html.escape(text).replace("|", "\\|").replace("\n", " ")
+
 
 def format_finding(finding):
     location = f"{finding.get('file', '?')}:{finding.get('line', '?')}"
@@ -179,6 +278,25 @@ def is_passing(results):
     return not any(r.error or r.blocking_findings for r in results)
 
 
+def write_step_summary(report):
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        with open(summary_path, "a", encoding="utf-8") as summary:
+            summary.write(report + "\n")
+        logger.info("Relatório gravado no Job Summary do Actions")
+
+
+def log_verdict(results, passed):
+    for result in results:
+        logger.info("  %-22s %-9s %.1fs  %s", result.agent, result.status,
+                    result.duration_s, severity_counts(result.findings))
+    if passed:
+        logger.info("Resultado final: APROVADO")
+    else:
+        blocked_by = [r.agent for r in results if r.status != "OK"]
+        logger.error("Resultado final: BLOQUEADO por %s", ", ".join(blocked_by))
+
+
 # ---------------------------------------------------------------- GitHub
 
 
@@ -206,27 +324,41 @@ def publish_report(repo, pr_number, token, report):
     comment_id = find_previous_comment_id(repo, pr_number, token)
     if comment_id:
         github_request("PATCH", f"/repos/{repo}/issues/comments/{comment_id}", token, {"body": report})
+        logger.info("Comentário %s atualizado no PR #%s", comment_id, pr_number)
     else:
         github_request("POST", f"/repos/{repo}/issues/{pr_number}/comments", token, {"body": report})
-    logger.info("Relatório publicado no PR #%s", pr_number)
+        logger.info("Novo comentário publicado no PR #%s", pr_number)
 
 
 # ---------------------------------------------------------------- main
 
 
+def prepare_diff(base_ref):
+    with log_group("Arquivos do PR"):
+        relevant = log_changed_files(base_ref)
+        if not relevant:
+            logger.info("Nenhum arquivo casa com o filtro %s; revisão ignorada", ", ".join(DIFF_PATHS))
+            return ""
+        return collect_diff(base_ref, relevant)
+
+
 def main():
-    diff = collect_diff(require_env("BASE_REF"))
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
+    with log_group("Configuração"):
+        log_configuration(model)
+    diff = prepare_diff(require_env("BASE_REF"))
     if not diff.strip():
-        logger.info("Nenhuma alteração relevante no diff; revisão ignorada")
         return 0
     client = genai.Client(api_key=require_env("GEMINI_API_KEY"))
-    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
-    results = run_agents(client, model, diff)
+    with log_group(f"Execução dos agentes ({len(AGENTS)})"):
+        results = run_agents(client, model, diff)
     passed = is_passing(results)
-    publish_report(
-        require_env("GITHUB_REPOSITORY"), require_env("PR_NUMBER"),
-        require_env("GITHUB_TOKEN"), build_report(results, passed),
-    )
+    report = build_report(results, passed)
+    with log_group("Publicação"):
+        write_step_summary(report)
+        publish_report(require_env("GITHUB_REPOSITORY"), require_env("PR_NUMBER"),
+                       require_env("GITHUB_TOKEN"), report)
+    log_verdict(results, passed)
     return 0 if passed else 1
 
 
