@@ -69,7 +69,6 @@ RESPONSE_SCHEMA = {
     "required": ["summary", "findings"],
 }
 
-
 @dataclass
 class AgentResult:
     agent: str
@@ -81,7 +80,6 @@ class AgentResult:
     def blocking_findings(self):
         return [f for f in self.findings if f.get("severity") in BLOCKING_SEVERITIES]
 
-
 def require_env(name):
     value = os.environ.get(name, "").strip()
     if not value:
@@ -89,9 +87,7 @@ def require_env(name):
         sys.exit(2)
     return value
 
-
 # ---------------------------------------------------------------- diff
-
 
 def collect_diff(base_ref):
     command = ["git", "diff", "--unified=5", f"origin/{base_ref}...HEAD", "--", *DIFF_PATHS]
@@ -101,7 +97,6 @@ def collect_diff(base_ref):
         diff = diff[:MAX_DIFF_CHARS] + "\n[... diff truncado ...]"
     return diff
 
-
 def wrap_untrusted(diff):
     neutralized = diff.replace("</pr_diff>", "&lt;/pr_diff&gt;")
     return f"<pr_diff>\n{neutralized}\n</pr_diff>"
@@ -109,12 +104,10 @@ def wrap_untrusted(diff):
 
 # ---------------------------------------------------------------- agentes
 
-
 def load_agent_prompt(agent):
     content = (AGENTS_DIR / f"{agent}.md").read_text(encoding="utf-8")
     without_frontmatter = re.sub(r"\A---\n.*?\n---\n", "", content, flags=re.DOTALL)
     return without_frontmatter.strip() + "\n" + OUTPUT_CONTRACT
-
 
 def call_gemini(client, model, system_prompt, user_content):
     config = types.GenerateContentConfig(
@@ -135,7 +128,6 @@ def call_gemini(client, model, system_prompt, user_content):
             logger.warning("Tentativa %d falhou (%s); nova tentativa", attempt, type(exc).__name__)
             time.sleep(2**attempt)
 
-
 def run_agent(client, model, agent, diff):
     try:
         payload = call_gemini(client, model, load_agent_prompt(agent), wrap_untrusted(diff))
@@ -146,22 +138,18 @@ def run_agent(client, model, agent, diff):
         logger.error("Agente %s falhou: %s", agent, type(exc).__name__)
         return AgentResult(agent, error=type(exc).__name__)
 
-
 def run_agents(client, model, diff):
     with ThreadPoolExecutor(max_workers=len(AGENTS)) as pool:
         futures = [pool.submit(run_agent, client, model, agent, diff) for agent in AGENTS]
         return [future.result() for future in futures]
 
-
 # ---------------------------------------------------------------- relatório
-
 
 def sanitize(text):
     """Remove imagens/links (vetor de exfiltração) e escapa HTML e pipes de tabela."""
     text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "[imagem removida]", str(text))
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
     return html.escape(text).replace("|", "\\|").replace("\n", " ")
-
 
 def format_finding(finding):
     location = f"{finding.get('file', '?')}:{finding.get('line', '?')}"
