@@ -36,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-pro' }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_REF: ${{ github.base_ref }}
         run: python .github/scripts/orchestrator.py

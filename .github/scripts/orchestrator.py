@@ -35,7 +35,9 @@ DIFF_PATHS = (
     "*.yml", "*.yaml", "*.properties", "logback*.xml",
 )
 MAX_DIFF_CHARS = 200_000
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 MAX_ATTEMPTS = 3
+RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
 MAX_ERROR_CHARS = 300
 BLOCKING_SEVERITIES = {"CRITICAL"}
 SEVERITIES = ("CRITICAL", "MAJOR", "MINOR")
@@ -251,6 +253,12 @@ def load_agent_prompt(spec):
     return prompt
 
 
+def is_retryable(exc):
+    """Erros HTTP permanentes (ex.: 400, 401, 403, 404) não melhoram com nova tentativa."""
+    status = getattr(exc, "code", None)
+    return not isinstance(status, int) or status in RETRYABLE_STATUS
+
+
 def call_gemini(client, model, agent, system_prompt, user_content):
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
@@ -267,7 +275,7 @@ def call_gemini(client, model, agent, system_prompt, user_content):
             return json.loads(response.text)
         except Exception as exc:  # noqa: BLE001 - SDK lança tipos variados
             logger.warning("[%s] Tentativa %d falhou: %s", agent, attempt, short_error(exc))
-            if attempt == MAX_ATTEMPTS:
+            if attempt == MAX_ATTEMPTS or not is_retryable(exc):
                 raise
             time.sleep(2**attempt)
 
@@ -406,7 +414,7 @@ def prepare_diff(base_ref):
 
 
 def main():
-    model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    model = os.environ.get("GEMINI_MODEL", "").strip() or DEFAULT_MODEL
     with log_group("Configuração"):
         log_configuration(model)
         validate_agents()
