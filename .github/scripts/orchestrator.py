@@ -343,7 +343,7 @@ def prepare_diff(base_ref):
 
 
 def main():
-    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
+    model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
     with log_group("Configuração"):
         log_configuration(model)
     diff = prepare_diff(require_env("BASE_REF"))

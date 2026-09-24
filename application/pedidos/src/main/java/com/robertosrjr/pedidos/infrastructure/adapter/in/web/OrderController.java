@@ -52,6 +52,7 @@ public class OrderController {
 		this.updateOrderStatusUseCase = updateOrderStatusUseCase;
 		this.meterRegistry = meterRegistry;
 	}
+
 	@Operation(
 		summary = "Create a new order",
 		description = "Creates a new order with the provided items. Validates customer and calculates shipping in parallel using Virtual Threads."
@@ -88,6 +89,7 @@ public class OrderController {
 			long startTime = System.currentTimeMillis();
 			var order = createOrderUseCase.execute(command);
 			long duration = System.currentTimeMillis() - startTime;
+
 			// Record metrics using MeterRegistry.find()
 			meterRegistry.timer("orders.create.duration")
 				.record(duration, java.util.concurrent.TimeUnit.MILLISECONDS);
@@ -95,11 +97,14 @@ public class OrderController {
 			double orderValue = order.getTotal().amount().doubleValue();
 			meterRegistry.counter("orders.total.value").increment(orderValue);
 			meterRegistry.counter("orders.by.status").increment();
+
 			double currentTotal = meterRegistry.counter("orders.total.value").count();
 			logger.info("✅ Order Created: {} | Value: {} | Current Total: {} | Status: {} | Duration: {}ms | Metrics: OK",
 				order.getId(), orderValue, currentTotal, order.getStatus().name(), duration);
 			logger.info("=== END CREATE ORDER ===");
+
 			var response = OrderResponse.from(order);
+
 			return ResponseEntity
 				.created(URI.create("/api/v1/orders/" + order.getId()))
 				.body(response);
