@@ -93,7 +93,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(orders_created_total{job=\"pedidos-api\"}) + sum(orders_failed_total{job=\"pedidos-api\"})",
+          "expr": "sum(orders_succeeded_total{job=\"pedidos-api\"}) + sum(orders_failed_total{job=\"pedidos-api\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -149,7 +149,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(orders_created_total{job=\"pedidos-api\"})",
+          "expr": "sum(orders_succeeded_total{job=\"pedidos-api\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -274,7 +274,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "100 * sum(orders_created_total{job=\"pedidos-api\"}) / (sum(orders_created_total{job=\"pedidos-api\"}) + sum(orders_failed_total{job=\"pedidos-api\"}))",
+          "expr": "100 * sum(orders_succeeded_total{job=\"pedidos-api\"}) / (sum(orders_succeeded_total{job=\"pedidos-api\"}) + sum(orders_failed_total{job=\"pedidos-api\"}))",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -332,7 +332,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(orders_created_total{job=\"pedidos-api\"}[2m])) * 60",
+          "expr": "sum(rate(orders_succeeded_total{job=\"pedidos-api\"}[2m])) * 60",
           "legendFormat": "Sucesso",
           "datasource": {
             "type": "prometheus",
@@ -367,7 +367,7 @@
       "type": "stat",
       "id": 9,
       "title": "Valor total dos pedidos",
-      "description": "Soma do valor de todos os pedidos criados (orders.total.value).",
+      "description": "Soma do valor de todos os pedidos criados (orders.total.value). Separado por moeda: valores em moedas diferentes nunca são somados.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -412,11 +412,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(orders_total_value_total{job=\"pedidos-api\"})",
+          "expr": "sum by (currency) (orders_total_value_total{job=\"pedidos-api\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
-          }
+          },
+          "legendFormat": "{{currency}}"
         }
       ]
     },
@@ -424,7 +425,7 @@
       "type": "stat",
       "id": 10,
       "title": "Ticket médio (acumulado)",
-      "description": "Valor médio por pedido desde o início: valor total / pedidos com sucesso.",
+      "description": "Valor médio por pedido desde o início: valor total / pedidos com sucesso. Separado por moeda: valores em moedas diferentes nunca são somados.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -469,11 +470,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(orders_total_value_total{job=\"pedidos-api\"}) / sum(orders_created_total{job=\"pedidos-api\"})",
+          "expr": "sum by (currency) (orders_total_value_total{job=\"pedidos-api\"}) / sum by (currency) (orders_succeeded_total{job=\"pedidos-api\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
-          }
+          },
+          "legendFormat": "{{currency}}"
         }
       ]
     },
@@ -481,7 +483,7 @@
       "type": "timeseries",
       "id": 11,
       "title": "Valor vendido por minuto",
-      "description": "Receita gerada por minuto.",
+      "description": "Receita gerada por minuto. Separado por moeda: valores em moedas diferentes nunca são somados.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -527,8 +529,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(orders_total_value_total{job=\"pedidos-api\"}[2m])) * 60",
-          "legendFormat": "Valor/min",
+          "expr": "sum by (currency) (rate(orders_total_value_total{job=\"pedidos-api\"}[2m])) * 60",
+          "legendFormat": "{{currency}}",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -540,7 +542,7 @@
       "type": "timeseries",
       "id": 12,
       "title": "Ticket médio (janela de 5 min)",
-      "description": "Valor médio por pedido nos últimos 5 minutos.",
+      "description": "Valor médio por pedido nos últimos 5 minutos. Separado por moeda: valores em moedas diferentes nunca são somados.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -586,8 +588,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(orders_total_value_total{job=\"pedidos-api\"}[5m])) / sum(increase(orders_created_total{job=\"pedidos-api\"}[5m]))",
-          "legendFormat": "Ticket médio",
+          "expr": "sum by (currency) (increase(orders_total_value_total{job=\"pedidos-api\"}[5m])) / sum by (currency) (increase(orders_succeeded_total{job=\"pedidos-api\"}[5m]))",
+          "legendFormat": "{{currency}}",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1012,7 +1014,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max(jvm_memory_heap_used_percent{job=\"pedidos-api\"})",
+          "expr": "100 * sum(jvm_memory_used_bytes{job=\"pedidos-api\", area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"pedidos-api\", area=\"heap\"} > 0)",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1133,7 +1135,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max(process_uptime{job=\"pedidos-api\"})",
+          "expr": "max(process_uptime_seconds{job=\"pedidos-api\"})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1210,7 +1212,7 @@
       "type": "timeseries",
       "id": 25,
       "title": "Threads",
-      "description": "Threads virtuais x de plataforma ativas.",
+      "description": "Threads virtuais no scheduler (mounted = rodando num carrier; queued = aguardando carrier; queued > 0 indica saturação) e threads de plataforma vivas. Threads virtuais estacionadas em I/O não são contadas pela JVM; a concorrência aparece em 'Requisições em andamento'.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -1255,8 +1257,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max(threads_virtual_active{job=\"pedidos-api\"})",
-          "legendFormat": "Virtuais",
+          "expr": "max by (scheduling_status) ({__name__=~\"jvm_threads_virtual_live(_threads)?\", job=\"pedidos-api\"})",
+          "legendFormat": "Virtuais ({{scheduling_status}})",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1264,8 +1266,17 @@
         },
         {
           "refId": "B",
-          "expr": "max(threads_platform_active{job=\"pedidos-api\"})",
+          "expr": "max({__name__=~\"jvm_threads_live(_threads)?\", job=\"pedidos-api\"})",
           "legendFormat": "Plataforma",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "sum({__name__=~\"http_server_requests_active(_active_count|_seconds_gcount)\", job=\"pedidos-api\"})",
+          "legendFormat": "Requisições em andamento (1 thread virtual cada)",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"

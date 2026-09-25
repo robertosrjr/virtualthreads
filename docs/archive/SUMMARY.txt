@@ -1,3 +1,6 @@
+[DOCUMENTO ARQUIVADO] Descreve a implementacao de setembro de 2026 (antes da ADR-002).
+Referencia atual: docs/OBSERVABILITY.md e docs/TRACING.md
+
 ================================================================================
         PEDIDOS API - MeterBinder Pattern Implementation Summary
 ================================================================================

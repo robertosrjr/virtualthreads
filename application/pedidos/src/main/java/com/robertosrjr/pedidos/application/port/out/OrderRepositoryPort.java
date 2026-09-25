@@ -1,27 +1,22 @@
 package com.robertosrjr.pedidos.application.port.out;
 
+import com.robertosrjr.pedidos.application.pagination.PageQuery;
+import com.robertosrjr.pedidos.application.pagination.PagedResult;
 import com.robertosrjr.pedidos.domain.model.Order;
 import com.robertosrjr.pedidos.domain.model.OrderStatus;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepositoryPort {
 	Order save(Order order);
+
 	Optional<Order> findById(UUID orderId);
-	List<Order> findAll(OrderFilter filter);
+
+	/** Pedidos que atendem ao filtro, do mais recente para o mais antigo. */
+	PagedResult<Order> findAll(OrderFilter filter, PageQuery page);
 
 	record OrderFilter(UUID customerId, OrderStatus status) {
-		public OrderFilter(UUID customerId, OrderStatus status) {
-			this.customerId = customerId;
-			this.status = status;
-		}
-
-		public static OrderFilter empty() {
-			return new OrderFilter(null, null);
-		}
-
 		public boolean hasCustomerId() {
 			return customerId != null;
 		}

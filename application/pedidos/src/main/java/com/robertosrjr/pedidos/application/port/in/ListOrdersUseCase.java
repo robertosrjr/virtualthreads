@@ -1,25 +1,16 @@
 package com.robertosrjr.pedidos.application.port.in;
 
+import com.robertosrjr.pedidos.application.pagination.PageQuery;
+import com.robertosrjr.pedidos.application.pagination.PagedResult;
 import com.robertosrjr.pedidos.domain.model.Order;
 import com.robertosrjr.pedidos.domain.model.OrderStatus;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface ListOrdersUseCase {
-	List<Order> execute(ListOrdersCommand command);
+	PagedResult<Order> execute(ListOrdersCommand command);
 
-	record ListOrdersCommand(UUID customerId, OrderStatus status) {
-		public static ListOrdersCommand empty() {
-			return new ListOrdersCommand(null, null);
-		}
-
-		public boolean hasCustomerId() {
-			return customerId != null;
-		}
-
-		public boolean hasStatus() {
-			return status != null;
-		}
+	/** Filtros opcionais: {@code null} significa "sem filtro". */
+	record ListOrdersCommand(UUID customerId, OrderStatus status, PageQuery page) {
 	}
 }

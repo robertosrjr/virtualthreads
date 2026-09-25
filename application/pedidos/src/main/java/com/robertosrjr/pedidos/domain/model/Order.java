@@ -1,21 +1,26 @@
 package com.robertosrjr.pedidos.domain.model;
 
+import com.robertosrjr.pedidos.domain.exception.CurrencyMismatchException;
 import com.robertosrjr.pedidos.domain.exception.EmptyOrderException;
 import com.robertosrjr.pedidos.domain.exception.InvalidOrderStateException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Order {
 	private final UUID id;
 	private final UUID customerId;
 	private final List<OrderItem> items;
-	private OrderStatus status;
 	private final Money shippingCost;
 	private final Money total;
 	private final Instant createdAt;
+	// ReentrantLock em vez de synchronized: no Java 21, synchronized prende a thread virtual ao carrier
+	private final ReentrantLock statusLock = new ReentrantLock();
+	private volatile OrderStatus status;
 
 	private Order(UUID id, UUID customerId, List<OrderItem> items, OrderStatus status,
 			Money shippingCost, Money total, Instant createdAt) {
@@ -32,93 +37,67 @@ public class Order {
 		Objects.requireNonNull(customerId, "Customer ID cannot be null");
 		Objects.requireNonNull(items, "Items list cannot be null");
 		Objects.requireNonNull(shippingCost, "Shipping cost cannot be null");
-
 		if (items.isEmpty()) {
 			throw new EmptyOrderException();
 		}
-
 		validateCurrencyConsistency(items, shippingCost);
 
-		Money itemsTotal = calculateItemsTotal(items);
-		Money total = itemsTotal.add(shippingCost);
+		List<OrderItem> immutableItems = List.copyOf(items);
+		Money total = calculateItemsTotal(immutableItems, shippingCost.currency()).add(shippingCost);
+		return new Order(UUID.randomUUID(), customerId, immutableItems, OrderStatus.PENDING, shippingCost, total,
+			Instant.now());
+	}
 
-		return new Order(
-			UUID.randomUUID(),
-			customerId,
-			items,
-			OrderStatus.PENDING,
-			shippingCost,
-			total,
-			Instant.now()
-		);
+	/**
+	 * Muda o status de forma atômica: duas requisições concorrentes não podem aplicar transições
+	 * a partir do mesmo status de origem.
+	 */
+	public void changeStatusTo(OrderStatus newStatus) {
+		Objects.requireNonNull(newStatus, "New status cannot be null");
+		statusLock.lock();
+		try {
+			if (!status.canTransitionTo(newStatus)) {
+				throw new InvalidOrderStateException("Cannot change order from " + status + " to " + newStatus);
+			}
+			this.status = newStatus;
+		} finally {
+			statusLock.unlock();
+		}
 	}
 
 	public void confirm() {
-		if (!status.canTransitionTo(OrderStatus.CONFIRMED)) {
-			throw new InvalidOrderStateException(
-				"Cannot confirm order with status: " + status
-			);
-		}
-		this.status = OrderStatus.CONFIRMED;
+		changeStatusTo(OrderStatus.CONFIRMED);
 	}
 
 	public void startProcessing() {
-		if (!status.canTransitionTo(OrderStatus.PROCESSING)) {
-			throw new InvalidOrderStateException(
-				"Cannot start processing order with status: " + status
-			);
-		}
-		this.status = OrderStatus.PROCESSING;
+		changeStatusTo(OrderStatus.PROCESSING);
 	}
 
 	public void ship() {
-		if (!status.canTransitionTo(OrderStatus.SHIPPED)) {
-			throw new InvalidOrderStateException(
-				"Cannot ship order with status: " + status
-			);
-		}
-		this.status = OrderStatus.SHIPPED;
+		changeStatusTo(OrderStatus.SHIPPED);
 	}
 
 	public void deliver() {
-		if (!status.canTransitionTo(OrderStatus.DELIVERED)) {
-			throw new InvalidOrderStateException(
-				"Cannot deliver order with status: " + status
-			);
-		}
-		this.status = OrderStatus.DELIVERED;
+		changeStatusTo(OrderStatus.DELIVERED);
 	}
 
 	public void cancel() {
-		if (!status.canTransitionTo(OrderStatus.CANCELLED)) {
-			throw new InvalidOrderStateException(
-				"Cannot cancel order with status: " + status
-			);
-		}
-		this.status = OrderStatus.CANCELLED;
+		changeStatusTo(OrderStatus.CANCELLED);
 	}
 
 	private static void validateCurrencyConsistency(List<OrderItem> items, Money shippingCost) {
 		String shippingCurrency = shippingCost.currency();
 		boolean currencyMismatch = items.stream()
 			.anyMatch(item -> !item.unitPrice().currency().equals(shippingCurrency));
-
 		if (currencyMismatch) {
-			throw new InvalidOrderStateException(
-				"All items and shipping cost must use the same currency"
-			);
+			throw new CurrencyMismatchException();
 		}
 	}
 
-	private static Money calculateItemsTotal(List<OrderItem> items) {
-		if (items.isEmpty()) {
-			throw new EmptyOrderException();
-		}
-
-		String currency = items.get(0).unitPrice().currency();
+	private static Money calculateItemsTotal(List<OrderItem> items, String currency) {
 		return items.stream()
 			.map(OrderItem::subtotal)
-			.reduce(new Money(java.math.BigDecimal.ZERO, currency), Money::add);
+			.reduce(new Money(BigDecimal.ZERO, currency), Money::add);
 	}
 
 	public UUID getId() {
@@ -129,6 +108,7 @@ public class Order {
 		return customerId;
 	}
 
+	/** Lista imutável: itens só mudam por comportamento do agregado. */
 	public List<OrderItem> getItems() {
 		return items;
 	}

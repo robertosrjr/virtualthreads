@@ -1,3 +1,5 @@
+> ⚠️ **Documento arquivado.** Descreve a implementação de setembro de 2026 (antes da ADR-002) e cita classes e métricas que não existem mais. A referência atual está em [docs/OBSERVABILITY.md](../OBSERVABILITY.md) e [docs/TRACING.md](../TRACING.md).
+
 # ✅ Conformidade com Spring Metrics Skill
 
 ## 📋 Skill: `.claude/skills/spring-metrics-skill/SKILL.md`

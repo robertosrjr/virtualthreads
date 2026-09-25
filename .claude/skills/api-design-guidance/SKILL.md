@@ -53,13 +53,14 @@ GET  /api/order/1              → singular
 
 ### 3. Formato de Resposta Padrão
 
-**Sucesso (200, 201):**
+**Sucesso com um recurso (200, 201):** o recurso vai direto no corpo, sem envelope.
 ```json
-{
-  "data": { /* objeto ou lista */ },
-  "meta": { "timestamp": "2026-09-08T12:00:00Z" }
-}
+GET /api/v1/orders/{id}
+
+{ "id": "7d36ce98-...", "status": "PENDING", "total": { "amount": 110.00, "currency": "BRL" } }
 ```
+
+**Sucesso com uma coleção:** sempre paginada e envelopada em `{data, pagination}` (ver seção 4). Nunca devolva um array solto: ele não comporta metadados sem quebrar o contrato.
 
 **Erro (RFC 7807 — Problem Details):**
 ```json
@@ -91,6 +92,12 @@ public ProblemDetail handleValidation(ValidationException ex) {
 ```
 
 ### 4. Paginação Padronizada
+
+Regras:
+- `page` começa em **1**; `size` padrão 20, máximo 100.
+- Ordem **estável** (ex.: mais recente primeiro, com o ID como desempate); sem ela, páginas repetem ou pulam itens.
+- Parâmetro fora dos limites responde **400**, nunca 500: valide na borda (`@Min`/`@Max`, que também documentam o OpenAPI) e no objeto de paginação da camada de aplicação.
+- A paginação é um conceito da camada de aplicação: a porta de saída recebe e devolve tipos próprios, sem `org.springframework.data`.
 
 ```json
 GET /api/v1/orders?page=1&size=20
