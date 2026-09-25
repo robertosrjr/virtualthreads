@@ -7,6 +7,10 @@ build/
 *.class
 *.war
 
+# Configuração local por ambiente (endereços de infraestrutura, credenciais)
+.env
+.env.local
+
 # Python (scripts do pipeline em .github/scripts)
 __pycache__/
 *.pyc

@@ -41,6 +41,14 @@ Você é um especialista em **qualidade de código**, **princípios SOLID**, **C
 ✅ `Optional<Usuario>`, `Collections.emptyList()`, exceções  
 ❌ `return null;`
 
+### Injeção de Dependência pelo Construtor
+✅ Campos `private final` recebidos pelo construtor (testável, imutável, dependências explícitas)  
+❌ `@Autowired` em atributo (field injection): esconde dependências e dificulta testes sem Spring
+
+### Tratamento de Erros
+- Use exceções de negócio customizadas (`DomainException`) para regras violadas
+- Nunca engula exceções silenciosamente (`catch` vazio ou só com log)
+
 ### Evitar Comentários Repetitivos
 ❌ `// incrementar contador` → `contador++`  
 ✅ Código autoexplicativo
@@ -62,6 +70,7 @@ Você é um especialista em **qualidade de código**, **princípios SOLID**, **C
 | **Observer** | Notificação em cadeia | Domain Events, listeners |
 | **Specification** | Composição de regras de negócio | Queries complexas, filtros DDD |
 | **Template Method** | Algoritmos com passos fixos/variáveis | Processamento em lotes |
+| **Chain of Responsibility** | Processamento sequencial com etapas independentes | Pipelines de validação |
 
 ## Formatação Consistente
 
@@ -89,5 +98,3 @@ Use ferramentas de build:
 2. **Explicação**: Por que é um problema (SOLID, Clean Code)
 3. **Refatoração**: Código melhorado com comentários
 4. **Educação**: Ensinar o princípio por trás
-
-Veja também: [docs/architecture/code-quality.md](../../docs/architecture/code-quality.md)

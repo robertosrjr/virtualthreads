@@ -3,8 +3,8 @@ package com.robertosrjr.pedidos.infrastructure.adapter.out.client;
 import com.robertosrjr.pedidos.application.port.out.ShippingCalculationPort;
 import com.robertosrjr.pedidos.domain.model.Money;
 import com.robertosrjr.pedidos.domain.model.OrderItem;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,37 +12,40 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public class SimulatedShippingCalculationAdapter implements ShippingCalculationPort {
+	/** Nome métrico mantido: o dashboard lê orders_calculation_shipping_duration_seconds_*. */
+	static final String OBSERVATION_NAME = "orders.calculation.shipping.duration";
+
 	private static final Logger logger = LoggerFactory.getLogger(SimulatedShippingCalculationAdapter.class);
 	private final long delayMs;
 	private final BigDecimal baseCost;
-	private final Timer shippingTimer;
+	private final ObservationRegistry observationRegistry;
 
-	public SimulatedShippingCalculationAdapter(long delayMs, BigDecimal baseCost, MeterRegistry meterRegistry) {
+	public SimulatedShippingCalculationAdapter(long delayMs, BigDecimal baseCost,
+			ObservationRegistry observationRegistry) {
 		this.delayMs = delayMs;
 		this.baseCost = baseCost;
-		this.shippingTimer = Timer.builder("orders.calculation.shipping.duration")
-			.description("Time to calculate shipping cost (simulated I/O)")
-			.publishPercentiles(0.5, 0.95, 0.99)
-			.register(meterRegistry);
+		this.observationRegistry = observationRegistry;
 	}
 
+	/** Gera um span filho ("shipping-calculation") e o timer de latência da chamada simulada. */
 	@Override
 	public Money calculate(List<OrderItem> items) {
+		return Observation.createNotStarted(OBSERVATION_NAME, observationRegistry)
+			.contextualName("shipping-calculation")
+			.lowCardinalityKeyValue("simulated", "true")
+			.observe(() -> simulateRemoteCall(items));
+	}
+
+	private Money simulateRemoteCall(List<OrderItem> items) {
 		try {
-			logger.debug("Simulating shipping calculation for {} items (delay: {}ms)", items.size(), delayMs);
-			long startTime = System.currentTimeMillis();
 			Thread.sleep(delayMs);
-			long duration = System.currentTimeMillis() - startTime;
-
 			String currency = items.isEmpty() ? "BRL" : items.get(0).unitPrice().currency();
-			Money result = new Money(baseCost, currency);
-
-			shippingTimer.record(duration, java.util.concurrent.TimeUnit.MILLISECONDS);
-			logger.debug("Shipping calculation completed: {} (actual: {}ms)", result, duration);
-			return result;
+			logger.atDebug().addKeyValue("items", items.size()).addKeyValue("delay_ms", delayMs)
+				.log("Cálculo de frete simulado concluído");
+			return new Money(baseCost, currency);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			throw new RuntimeException("Shipping calculation interrupted", e);
+			throw new IllegalStateException("Shipping calculation interrupted", e);
 		}
 	}
 }

@@ -12,9 +12,11 @@ import com.robertosrjr.pedidos.application.usecase.GetOrderUseCaseImpl;
 import com.robertosrjr.pedidos.application.usecase.ListOrdersUseCaseImpl;
 import com.robertosrjr.pedidos.application.usecase.UpdateOrderStatusUseCaseImpl;
 import com.robertosrjr.pedidos.infrastructure.adapter.out.persistence.InMemoryOrderRepositoryAdapter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.concurrent.Executor;
 
 @Configuration
@@ -30,9 +32,11 @@ public class UseCaseConfig {
 		OrderRepositoryPort repository,
 		CustomerValidationPort customerValidation,
 		ShippingCalculationPort shippingCalculation,
-		Executor virtualThreadExecutor
+		Executor virtualThreadExecutor,
+		@Value("${app.dependencies.timeout:2s}") Duration dependencyTimeout
 	) {
-		return new CreateOrderUseCaseImpl(repository, customerValidation, shippingCalculation, virtualThreadExecutor);
+		return new CreateOrderUseCaseImpl(repository, customerValidation, shippingCalculation, virtualThreadExecutor,
+			dependencyTimeout);
 	}
 
 	@Bean

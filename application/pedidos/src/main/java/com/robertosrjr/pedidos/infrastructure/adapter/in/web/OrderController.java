@@ -1,34 +1,36 @@
 package com.robertosrjr.pedidos.infrastructure.adapter.in.web;
 
+import com.robertosrjr.pedidos.application.pagination.PageQuery;
 import com.robertosrjr.pedidos.application.port.in.CreateOrderUseCase;
 import com.robertosrjr.pedidos.application.port.in.GetOrderUseCase;
 import com.robertosrjr.pedidos.application.port.in.ListOrdersUseCase;
 import com.robertosrjr.pedidos.application.port.in.UpdateOrderStatusUseCase;
 import com.robertosrjr.pedidos.domain.model.Money;
+import com.robertosrjr.pedidos.domain.model.Order;
 import com.robertosrjr.pedidos.domain.model.OrderStatus;
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.request.CreateOrderRequest;
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.request.OrderItemRequest;
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.request.UpdateOrderStatusRequest;
 import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.response.OrderResponse;
-import io.micrometer.core.instrument.Counter;
+import com.robertosrjr.pedidos.infrastructure.adapter.in.web.dto.response.PagedResponse;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Tag(name = "Orders", description = "Order management endpoints")
 @RestController
@@ -62,55 +64,24 @@ public class OrderController {
 		description = "Order created successfully",
 		content = @Content(schema = @Schema(implementation = OrderResponse.class))
 	)
+	@ApiResponse(responseCode = "400", description = "Invalid request body (RFC 7807 with field errors)")
+	@ApiResponse(responseCode = "422", description = "Business rule violated (empty order, mixed currencies)")
+	@ApiResponse(responseCode = "503", description = "Customer validation or shipping calculation unavailable")
 	@PostMapping
 	public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
-		Thread currentThread = Thread.currentThread();
-		boolean isVirtual = currentThread.isVirtual();
-		String threadType = isVirtual ? "VIRTUAL" : "PLATFORM";
-
-		logger.info("=== CREATE ORDER REQUEST ===");
-		logger.info("🧵 Thread Type: {} | Thread ID: {} | Thread Name: {}",
-			threadType, currentThread.threadId(), currentThread.getName());
-		logger.info("Customer: {} | Items: {}", request.customerId(), request.items().size());
-
+		var command = toCommand(request);
+		long startTime = System.currentTimeMillis();
 		try {
-			var command = new CreateOrderUseCase.CreateOrderCommand(
-				request.customerId(),
-				request.items().stream()
-					.map(item -> new CreateOrderUseCase.CreateOrderItemCommand(
-						item.productId(),
-						item.productName(),
-						item.quantity(),
-						new Money(item.unitPrice(), item.currency())
-					))
-					.toList()
-			);
-
-			long startTime = System.currentTimeMillis();
 			var order = createOrderUseCase.execute(command);
 			long duration = System.currentTimeMillis() - startTime;
-
-			// Record metrics using MeterRegistry.find()
-			meterRegistry.timer("orders.create.duration")
-				.record(duration, java.util.concurrent.TimeUnit.MILLISECONDS);
-			meterRegistry.counter("orders.created").increment();
-			double orderValue = order.getTotal().amount().doubleValue();
-			meterRegistry.counter("orders.total.value").increment(orderValue);
-			meterRegistry.counter("orders.by.status").increment();
-
-			double currentTotal = meterRegistry.counter("orders.total.value").count();
-			logger.info("✅ Order Created: {} | Value: {} | Current Total: {} | Status: {} | Duration: {}ms | Metrics: OK",
-				order.getId(), orderValue, currentTotal, order.getStatus().name(), duration);
-			logger.info("=== END CREATE ORDER ===");
-
-			var response = OrderResponse.from(order);
-
+			recordCreationMetrics(order, duration);
+			logOrderCreated(order, duration);
 			return ResponseEntity
 				.created(URI.create("/api/v1/orders/" + order.getId()))
-				.body(response);
-		} catch (Exception e) {
+				.body(OrderResponse.from(order));
+		} catch (RuntimeException e) {
+			// Só contabiliza: o GlobalExceptionHandler registra o erro uma única vez
 			meterRegistry.counter("orders.failed").increment();
-			logger.error("❌ Order creation failed: {}", e.getMessage(), e);
 			throw e;
 		}
 	}
@@ -133,22 +104,20 @@ public class OrderController {
 
 	@Operation(
 		summary = "List orders",
-		description = "Lists all orders, optionally filtered by customer ID and/or status"
+		description = "Lists orders newest first, paginated (pages start at 1), optionally filtered by customer ID and/or status"
 	)
-	@ApiResponse(
-		responseCode = "200",
-		description = "Orders retrieved",
-		content = @Content(schema = @Schema(implementation = OrderResponse.class))
-	)
+	@ApiResponse(responseCode = "200", description = "Page of orders")
+	@ApiResponse(responseCode = "400", description = "Invalid filter or pagination parameter")
 	@GetMapping
-	public ResponseEntity<List<OrderResponse>> listOrders(
+	public ResponseEntity<PagedResponse<OrderResponse>> listOrders(
 		@RequestParam(required = false) UUID customerId,
-		@RequestParam(required = false) OrderStatus status
+		@RequestParam(required = false) OrderStatus status,
+		@RequestParam(defaultValue = "1") @Min(1) int page,
+		@RequestParam(defaultValue = "" + PageQuery.DEFAULT_SIZE) @Min(1) @Max(PageQuery.MAX_SIZE) int size
 	) {
-		var command = new ListOrdersUseCase.ListOrdersCommand(customerId, status);
+		var command = new ListOrdersUseCase.ListOrdersCommand(customerId, status, new PageQuery(page, size));
 		var orders = listOrdersUseCase.execute(command);
-		var responses = orders.stream().map(OrderResponse::from).toList();
-		return ResponseEntity.ok(responses);
+		return ResponseEntity.ok(PagedResponse.from(orders.map(OrderResponse::from)));
 	}
 
 	@Operation(
@@ -170,10 +139,49 @@ public class OrderController {
 		var command = new UpdateOrderStatusUseCase.UpdateOrderStatusCommand(orderId, request.newStatus());
 		var order = updateOrderStatusUseCase.execute(command);
 
-		// Track status transitions
-		meterRegistry.counter("orders.by.status").increment();
-		logger.info("📊 Order Status Updated: {} | New Status: {}", orderId, order.getStatus());
+		recordStatus(order.getStatus());
+		logger.atInfo()
+			.addKeyValue("order_id", orderId)
+			.addKeyValue("status", order.getStatus())
+			.log("Status do pedido atualizado");
 
 		return ResponseEntity.ok(OrderResponse.from(order));
+	}
+
+	private static CreateOrderUseCase.CreateOrderCommand toCommand(CreateOrderRequest request) {
+		var items = request.items().stream().map(OrderController::toItemCommand).toList();
+		return new CreateOrderUseCase.CreateOrderCommand(request.customerId(), items);
+	}
+
+	private static CreateOrderUseCase.CreateOrderItemCommand toItemCommand(OrderItemRequest item) {
+		return new CreateOrderUseCase.CreateOrderItemCommand(
+			item.productId(),
+			item.productName(),
+			item.quantity(),
+			new Money(item.unitPrice(), item.currency())
+		);
+	}
+
+	private void recordCreationMetrics(Order order, long durationMs) {
+		String currency = order.getTotal().currency();
+		meterRegistry.timer("orders.create.duration").record(durationMs, TimeUnit.MILLISECONDS);
+		meterRegistry.counter("orders.succeeded", "currency", currency).increment();
+		meterRegistry.counter("orders.total.value", "currency", currency)
+			.increment(order.getTotal().amount().doubleValue());
+		recordStatus(order.getStatus());
+	}
+
+	private void recordStatus(OrderStatus status) {
+		meterRegistry.counter("orders.by.status", "status", status.name()).increment();
+	}
+
+	private void logOrderCreated(Order order, long durationMs) {
+		logger.atInfo()
+			.addKeyValue("order_id", order.getId())
+			.addKeyValue("status", order.getStatus())
+			.addKeyValue("items", order.getItems().size())
+			.addKeyValue("duration_ms", durationMs)
+			.addKeyValue("thread_type", Thread.currentThread().isVirtual() ? "virtual" : "platform")
+			.log("Pedido criado");
 	}
 }

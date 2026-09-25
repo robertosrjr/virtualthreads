@@ -4,7 +4,6 @@ import com.robertosrjr.pedidos.application.port.in.UpdateOrderStatusUseCase;
 import com.robertosrjr.pedidos.application.port.out.OrderRepositoryPort;
 import com.robertosrjr.pedidos.domain.exception.OrderNotFoundException;
 import com.robertosrjr.pedidos.domain.model.Order;
-import com.robertosrjr.pedidos.domain.model.OrderStatus;
 
 public class UpdateOrderStatusUseCaseImpl implements UpdateOrderStatusUseCase {
 	private final OrderRepositoryPort repository;
@@ -13,32 +12,12 @@ public class UpdateOrderStatusUseCaseImpl implements UpdateOrderStatusUseCase {
 		this.repository = repository;
 	}
 
+	/** A regra de transição é do agregado: status inválido (inclusive voltar a PENDING) lança exceção. */
 	@Override
 	public Order execute(UpdateOrderStatusCommand command) {
 		Order order = repository.findById(command.orderId())
 			.orElseThrow(() -> new OrderNotFoundException(command.orderId()));
-
-		switch (command.newStatus()) {
-		case CONFIRMED:
-			order.confirm();
-			break;
-		case PROCESSING:
-			order.startProcessing();
-			break;
-		case SHIPPED:
-			order.ship();
-			break;
-		case DELIVERED:
-			order.deliver();
-			break;
-		case CANCELLED:
-			order.cancel();
-			break;
-		case PENDING:
-		default:
-			break;
-		}
-
+		order.changeStatusTo(command.newStatus());
 		return repository.save(order);
 	}
 }

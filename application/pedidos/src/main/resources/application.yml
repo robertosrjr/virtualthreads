@@ -4,6 +4,9 @@ spring:
   threads:
     virtual:
       enabled: true
+  config:
+    # Endereços da infraestrutura por ambiente: copie .env.example para .env (fora do git)
+    import: optional:file:.env[.properties]
 
 server:
   port: 8080
@@ -22,15 +25,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,env
+        include: health,info,metrics,prometheus
       base-path: /actuator
   endpoint:
     health:
       probes:
         enabled: true
-      show-details: always
-    metrics:
-      enabled: true
+      show-details: when-authorized
   health:
     livenessState:
       enabled: true
@@ -40,23 +41,36 @@ management:
   # OpenTelemetry / Jaeger Tracing
   tracing:
     sampling:
-      probability: 1.0  # Sample 100% of traces (adjust for production: 0.1 = 10%)
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}  # 1.0 = 100% (dev); use 0.1 em produção
     propagation:
-      type: w3c  # W3C Trace Context for interoperability
+      type: w3c
     export:
       otlp:
-        enabled: true  # Enable OTLP exporter to Jaeger
-        endpoint: http://ec2-54-232-1-143.sa-east-1.compute.amazonaws.com:4318/v1/traces  # Jaeger OTLP HTTP
-        headers:
-          Authorization: ""  # Add if Jaeger requires auth
-    observations:
-      http:
-        server:
-          enabled: true  # Trace incoming HTTP requests
-        client:
-          enabled: true  # Trace outgoing HTTP calls
+        enabled: ${OTLP_TRACING_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
 
-  # Prometheus Metrics
+  # Métricas seguem pelo Pushgateway; o export OTLP de métricas do starter OpenTelemetry fica desligado
+  otlp:
+    metrics:
+      export:
+        enabled: ${OTLP_METRICS_ENABLED:false}
+
+  # Prometheus: scrape em /actuator/prometheus e push nativo ao Pushgateway da stack SRE
+  prometheus:
+    metrics:
+      export:
+        pushgateway:
+          enabled: ${PUSHGATEWAY_ENABLED:false}
+          address: ${PUSHGATEWAY_ADDRESS:localhost:9091}
+          job: pedidos-api
+          push-rate: ${PUSHGATEWAY_PUSH_RATE:20s}
+          grouping-key:
+            instance: ${PUSHGATEWAY_INSTANCE:local}
+
   metrics:
     tags:
       application: ${spring.application.name}
@@ -67,23 +81,18 @@ management:
         orders.create.duration: true
 
 logging:
+  structured:
+    format:
+      console: ecs  # JSON no padrão Elastic Common Schema; inclui traceId/spanId do MDC
   level:
     root: INFO
-    com.robertosrjr.pedidos: DEBUG
-    io.opentelemetry: WARN  # Suppress verbose OTel logs
-  pattern:
-    # Include trace ID and span ID for correlation with Jaeger
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{traceId}/%X{spanId}] %-5level %logger{36} - %msg%n"
+    com.robertosrjr.pedidos: ${APP_LOG_LEVEL:INFO}
+    io.opentelemetry: WARN
 
 app:
+  dependencies:
+    timeout: ${APP_DEPENDENCIES_TIMEOUT:2s}  # limite por chamada às portas de saída (validação de cliente, frete)
   simulation:
     customer-validation-delay-ms: 150
     shipping-calculation-delay-ms: 200
     shipping-base-cost: 10.00
-
-  # Observability - Prometheus Push Gateway (V1 - Development)
-  observability:
-    pushgateway:
-      enabled: true  # Enable push to Prometheus
-      url: http://ec2-54-232-1-143.sa-east-1.compute.amazonaws.com:9091  # Pushgateway URL (ECS)
-      push-interval-ms: 20000  # Push every 60 seconds

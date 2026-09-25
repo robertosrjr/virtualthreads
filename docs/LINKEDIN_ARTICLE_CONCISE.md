@@ -241,9 +241,9 @@ open http://localhost:3000
 ```
 
 **Documentação:**
-- 📘 [DEPLOYMENT_JOURNEY.md](DEPLOYMENT_JOURNEY.md) — Passo a passo técnico
-- 📊 [METRICS.md](METRICS.md) — Queries PromQL prontas
-- 🧪 [Scripts](scripts/) — Load test automático
+- 📘 [DEPLOYMENT_JOURNEY.md](archive/DEPLOYMENT_JOURNEY.md) — Passo a passo técnico
+- 📊 [METRICS.md](OBSERVABILITY.md) — Queries PromQL prontas
+- 🧪 [Scripts](../scripts/) — Load test automático
 
 ---
 
@@ -269,9 +269,9 @@ E os dados? Falam por si:
 
 ## Links
 
-- [DEPLOYMENT_JOURNEY.md](DEPLOYMENT_JOURNEY.md)
-- [METRICS.md](METRICS.md)  
-- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
+- [DEPLOYMENT_JOURNEY.md](archive/DEPLOYMENT_JOURNEY.md)
+- [METRICS.md](OBSERVABILITY.md)  
+- [IMPLEMENTATION_STATUS.md](archive/IMPLEMENTATION_STATUS.md)
 - GitHub: [seu-link]
 
 ---

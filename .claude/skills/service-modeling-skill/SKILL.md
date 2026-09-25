@@ -1,5 +1,5 @@
 ---
-name: service-modeling
+name: service-modeling-skill
 description: "Use when modeling TOGAF Business Architecture services: differentiating Business Service ('what') from Service Offer ('how it is consumed'), mapping value streams, or structuring a business-architecture response with service/offer/risk sections."
 ---
 

@@ -15,8 +15,8 @@ public record CreateOrderRequest(
 	UUID customerId,
 
 	@Schema(description = "Order items")
-	@Valid
+	@NotNull(message = "Items are required")
 	@Size(min = 1, max = 100, message = "Order must contain between 1 and 100 items")
-	List<OrderItemRequest> items
+	List<@Valid OrderItemRequest> items
 ) {
 }

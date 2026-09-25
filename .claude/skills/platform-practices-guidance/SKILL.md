@@ -31,10 +31,10 @@ Referência completa: [12factor.net/pt_br](https://12factor.net/pt_br/)
 | 6 | **Processos** | Stateless; estado fica em backing services |
 | 7 | **Port Binding** | Serviço exposto via porta (`server.port`), autocontido |
 | 8 | **Concorrência** | Escalar via múltiplas instâncias, não threads gigantes |
-| 9 | **Descartabilidade** | Startup rápido + graceful shutdown |
+| 9 | **Descartabilidade** | Startup rápido + graceful shutdown (`SmartLifecycle`/`@PreDestroy`) |
 | 10 | **Paridade Dev/Prod** | Ambientes o mais parecidos (Docker/Testcontainers) |
 | 11 | **Logs** | Stream de eventos (stdout), nunca gerenciar arquivo local |
-| 12 | **Admin Processes** | Migrações/scripts como processos isolados (Flyway) |
+| 12 | **Admin Processes** | Migrações/scripts como processos isolados (Flyway/Liquibase) |
 
 ### Implementação em Spring Boot
 
@@ -76,6 +76,8 @@ Referência: [reactivemanifesto.org](https://www.reactivemanifesto.org/)
 - Maioria são CRUDs convencionais (use MVC + Virtual Threads)
 - Time não tem experiência com Reactor/Mono/Flux
 - Debugging é crítico (reativo é mais complexo)
+
+**Não misture** os dois paradigmas (MVC bloqueante e WebFlux) na mesma cadeia de chamadas.
 
 ### Arquitetura Reativa em Spring
 
@@ -199,5 +201,3 @@ public class ShutdownConfig {
 2. **Diagnóstico**: Quais 12FA estão faltando?
 3. **Recomendação**: Síncrono vs. reativo?
 4. **Implementação**: Código e configuração prontos
-
-Veja também: [docs/architecture/platform-practices.md](../../docs/architecture/platform-practices.md)

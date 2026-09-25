@@ -1,6 +1,6 @@
-# SKILL: Spring Boot 4.1.1 Distributed Tracing (Micrometer Tracing & OTel)
+# Spring Boot 4.1.1: tracing distribuído (Micrometer Tracing & OTel)
 
-Esta skill fornece padrões de implementação, configurações práticos e guias de código de referência para orientar o `spring-tracing-specialist` no desenvolvimento e na revisão de recursos de rastreamento distribuído em Java 21 e Spring Boot 4.1.1.
+Padrões de implementação, configurações práticas e código de referência para o desenvolvimento e na revisão de recursos de rastreamento distribuído em Java 21 e Spring Boot 4.1.1.
 
 ## 1. Configurações de Tracing Operacionais (application.properties)
 
@@ -18,7 +18,7 @@ logging.include-application-name=false
 
 Para enviar os traces utilizando o padrão de mercado do **OpenTelemetry Protocol (OTLP)** via rede, garanta o uso das propriedades:
 ```properties
-management.opentelemetry.tracing.export.otlp.url=http://otlp-collector.internal:4318/v1/metrics
+management.opentelemetry.tracing.export.otlp.url=http://otlp-collector.internal:4318/v1/traces
 ```
 
 ---

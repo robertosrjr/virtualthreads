@@ -1,5 +1,5 @@
 ---
-name: tech-documentation
+name: tech-documentation-skill
 description: "Use when creating Architecture Decision Records (ADRs), Detailed Design Architecture documents (DDAs), READMEs, or technical manuals. Ensures clear, structured technical documentation following software engineering standards."
 ---
 

@@ -1,99 +1,26 @@
-# Pedidos API - POC Virtual Threads
+# Documentação
 
-POC de serviço de gerenciamento de pedidos em **Java 21** + **Spring Boot 3.4** para demonstrar o impacto de **Virtual Threads** (JEP 444) na concorrência e throughput.
+Visão geral, execução e endpoints: [README principal](../README.md).
 
-## 🎯 Objetivo
+## Referência atual
 
-Comparar performance de **Virtual Threads** vs **Platform Threads** em operações bloqueantes (validação de cliente, cálculo de frete).
+| Documento | Conteúdo |
+|-----------|----------|
+| [OBSERVABILITY.md](OBSERVABILITY.md) | Métricas (catálogo e consultas), Pushgateway, dashboard, alertas e teste ponta a ponta |
+| [TRACING.md](TRACING.md) | Traces, spans das chamadas paralelas e correlação com os logs |
+| [ARCHITECTURE_DIAGRAM.txt](ARCHITECTURE_DIAGRAM.txt) | Fluxo de uma requisição pelas camadas e threads virtuais |
 
-## 🏗️ Arquitetura
+## Decisões (ADRs)
 
-Hexagonal (Ports & Adapters) + DDD com 3 módulos Maven:
-- **domain**: Lógica pura (Order, Money, Status)
-- **application**: Casos de uso e portas  
-- **infrastructure**: Adapters web, persistência em memória, integrações simuladas
+| ADR | Decisão |
+|-----|---------|
+| [ADR-001](adr/ADR-001-pipeline-governanca-ia.md) | Pipeline de governança de IA para revisão de PRs |
+| [ADR-002](adr/ADR-002-correcoes-auditoria-skills.md) | Correções da auditoria das skills: métricas, logs, API e tracing |
 
-## 🚀 Como Executar
+## Publicações
 
-### Pré-requisitos
+Textos publicados sobre a POC. Refletem a versão da época e não são atualizados: [LINKEDIN_ARTICLE.md](LINKEDIN_ARTICLE.md), [LINKEDIN_ARTICLE_CONCISE.md](LINKEDIN_ARTICLE_CONCISE.md), [LINKEDIN_POST.md](LINKEDIN_POST.md).
 
-- Java 21 ou superior
-- Maven 3.8.1 ou superior (ou usar `./mvnw`)
+## Arquivo
 
-### Compilar
-
-```bash
-cd application
-./mvnw clean compile
-```
-
-### Executar Testes
-
-```bash
-./mvnw clean test
-```
-
-### Iniciar a Aplicação
-
-```bash
-./mvnw spring-boot:run -f pedidos-infrastructure
-```
-
-A aplicação estará disponível em `http://localhost:8080`.
-
-### Acessar a Documentação Swagger UI
-
-```
-http://localhost:8080/swagger-ui.html
-```
-
-## 📝 Endpoints da API
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/api/v1/orders` | Criar pedido |
-| GET | `/api/v1/orders/{orderId}` | Obter pedido |
-| GET | `/api/v1/orders` | Listar pedidos (com filtros opcionais) |
-| PATCH | `/api/v1/orders/{orderId}/status` | Atualizar status |
-
-📖 **Documentação completa**: Swagger UI em `http://localhost:8080/swagger-ui.html`
-
-## 📊 Observabilidade
-
-- **Métricas**: Prometheus em `/actuator/prometheus`
-- **Traces**: OpenTelemetry + Jaeger
-- **Logs**: Estruturados com SLF4J
-
-📄 **Guia completo de métricas**: [METRICS.md](METRICS.md)
-
-## 📚 Documentação
-
-| Documento | Descrição |
-|-----------|-----------|
-| [DEPLOYMENT_JOURNEY.md](DEPLOYMENT_JOURNEY.md) | 🚀 **Roteiro completo de implementação** — Passo a passo técnico |
-| [METRICS.md](METRICS.md) | 📊 Guia completo de métricas e queries Grafana |
-| [QUICK_START_METRICS.md](QUICK_START_METRICS.md) | ⚡ Como testar métricas localmente |
-| [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) | ✅ Status de implementação |
-| [ARCHITECTURE_DIAGRAM.txt](ARCHITECTURE_DIAGRAM.txt) | 🏗️ Diagrama da arquitetura |
-| [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md) | 📝 Notas técnicas |
-
-## ✅ Implementado
-
-- Arquitetura Hexagonal + DDD
-- Virtual Threads no Tomcat
-- Paralelização com CompletableFuture
-- Testes: Unit + Integration + Architecture
-- OpenAPI/Swagger UI
-- Métricas Prometheus (MeterBinder pattern)
-- OpenTelemetry para tracing
-- Logging estruturado
-
-## 👨‍💻 Autor
-
-Roberto Silva Ramos Junior  
-📧 robertosrjr@gmail.com  
-🔗 [GitHub](https://github.com/robertosrjr)
-
-## 📝 Licença
-
-MIT
+Relatórios de etapas anteriores, mantidos como histórico: [archive/](archive/README.md).

@@ -36,8 +36,8 @@ Você é um **Auditor especializado em LGPD** que verifica exposição de Dados 
 
 ## 📚 Referências
 
-- **CLAUDE.md** → Segurança e Privacidade, Sanitização de PII
-- **lgpd-sre-compliance-skill** → Detalhes técnicos, workflow detalhado, templates de código
+- **CLAUDE.md** → Regras invioláveis de logs e LGPD
+- **lgpd-sre-compliance-skill** → Workflow de auditoria, tabela de mascaramento obrigatório e o `LogSanitizer` único
 - **spring-logging-skill** → Padrões seguros de logging, SLF4J fluente, MDC
 - **Lei 13.709/2018**: Art. 6º (Princípios: Minimização, Prevenção, Segurança), Art. 46 (Medidas de Segurança)
 

@@ -1,6 +1,6 @@
 ---
 name: testing-strategy-guidance
-description: "Use this skill when implementing TDD, designing test strategy, reviewing test coverage, or establishing testing conventions for the project."
+description: "Use this skill for developer-level Java tests: TDD, unit and integration tests (JUnit, AssertJ, Mockito, Testcontainers), ArchUnit architecture rules, test naming and coverage targets. For QA strategy across Agile Testing Quadrants, UI/E2E automation, Postman or SQL validation, use quality-assurance-skills."
 ---
 
 # Testes & TDD: Estratégia e Convenções
@@ -195,6 +195,8 @@ class OrderRepositoryIntegrationTest {
 | **Adapters** | Usar Testcontainers | Banco real, fila real |
 | **Externos** | Mockar integrações HTTP | `@MockBean` com `MockRestServiceServer` |
 
+Nunca mocke o próprio objeto sob teste.
+
 ```java
 // ✅ CERTO: mockar apenas ports
 @Test
@@ -276,5 +278,3 @@ Use badges no README:
 2. **Recomendação**: Quais testes faltam? Refatorar mocks?
 3. **Implementação**: Código de teste seguindo TDD + convenções
 4. **Educação**: Por que essa estratégia funciona?
-
-Veja também: [docs/testing/testing.md](../../docs/testing/testing.md)

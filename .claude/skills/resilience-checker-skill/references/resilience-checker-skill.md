@@ -1,8 +1,3 @@
----
-name: resilience-checker
-description: Analisa código-fonte em busca de falhas de resiliência e aplica ou recomenda padrões de tolerância a falhas (Circuit Breaker, Retry, Bulkhead, Rate Limiter, Time Limiter e Caching). Use sempre que o usuário solicitar uma revisão de código, melhoria de robustez ou implementação de boas práticas de arquitetura.
----
-
 Quando o usuário solicitar uma análise de resiliência do código, siga as etapas abaixo estruturadamente:
 
 1. **Varredura e Mapeamento de Dependências:**

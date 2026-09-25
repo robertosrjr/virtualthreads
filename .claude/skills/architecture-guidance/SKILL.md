@@ -51,11 +51,20 @@ src/main/java/com/empresa/projeto
       │    │    └── messaging → Listeners/Consumers
       │    └── out
       │         ├── persistence → JPA, Repositories, Mappers
-      │         └── client → HTTP/gRPC clients
+      │         ├── client → HTTP/gRPC clients
+      │         └── event  → Publicação de eventos (Kafka, SQS, etc.)
       └── config → Beans, segurança, OpenAPI
 ```
 
-### 3. Padrões DDD Essenciais
+### 3. Regras Práticas
+
+- Toda porta de entrada (`in`) é uma interface implementada por um **UseCase**.
+- Toda porta de saída (`out`) é uma interface implementada por um **Adapter** em `infrastructure`.
+- Controllers **nunca** chamam repositórios diretamente; sempre passam por um caso de uso.
+- Entidades JPA (`@Entity`) são **diferentes** das entidades de domínio; converta com `Mapper`/`Assembler`.
+- Repositories são definidos como porta em `application/port/out`, um por agregado.
+
+### 4. Padrões DDD Essenciais
 
 | Padrão | O quê | Quando usar |
 |--------|-------|------------|
@@ -67,19 +76,21 @@ src/main/java/com/empresa/projeto
 | **Domain Event** | Comunicação entre agregados sem acoplamento | "PedidoCriado", "PagamentoRecebido" |
 | **Bounded Context** | Modelo isolado com linguagem ubíqua | Catálogo vs. Carrinho vs. Pagamento |
 
-### 4. Validação Arquitetural
-
-Use **ArchUnit** para automatizar regras:
+Value Objects são imutáveis e se validam na construção; em Java 21, implemente como `record`:
 
 ```java
-@AnalyzeClasses(packages = "com.empresa.projeto")
-public class ArchitectureTest {
-    @ArchTest
-    static final ArchRule domainShouldNotDependOnInfrastructure =
-        noClasses().that().resideInAPackage("..domain..")
-            .should().dependOnClassesThat().resideInAPackage("..infrastructure..");
+public record Money(BigDecimal amount, Currency currency) {
+    public Money {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+    }
 }
 ```
+
+### 5. Validação Arquitetural
+
+Automatize a regra de dependência com **ArchUnit**. As regras e o exemplo de `ArchitectureTest` ficam na `testing-strategy-guidance` (seção "Validação Arquitetural com ArchUnit").
 
 ## Como Responder
 
@@ -87,5 +98,3 @@ public class ArchitectureTest {
 2. **Recomendação**: Sugerir ajustes conforme hexagonal + DDD
 3. **Implementação**: Fornecer código estruturado e pronto para usar
 4. **Validação**: Sugerir testes de arquitetura (ArchUnit)
-
-Veja também: [docs/architecture/architecture.md](../../docs/architecture/architecture.md)

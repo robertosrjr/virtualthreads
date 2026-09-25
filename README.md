@@ -1,6 +1,6 @@
 # Pedidos API - POC Virtual Threads
 
-POC de serviço de gerenciamento de pedidos em **Java 21** + **Spring Boot 3.4** para demonstrar o impacto de **Virtual Threads** (JEP 444) na concorrência e throughput.
+POC de serviço de gerenciamento de pedidos em **Java 21** + **Spring Boot 4.1.1** para demonstrar o impacto de **Virtual Threads** (JEP 444) na concorrência e throughput.
 
 ## 🎯 Objetivo
 
@@ -8,42 +8,34 @@ Comparar performance de **Virtual Threads** vs **Platform Threads** em operaçõ
 
 ## 🏗️ Arquitetura
 
-Hexagonal (Ports & Adapters) + DDD com 3 módulos Maven:
-- **domain**: Lógica pura (Order, Money, Status)
-- **application**: Casos de uso e portas  
-- **infrastructure**: Adapters web, persistência em memória, integrações simuladas
+Hexagonal (Ports & Adapters) + DDD, em um módulo Maven (`application/pedidos`) com três camadas por pacote:
+- **domain**: lógica pura (`Order`, `Money`, `OrderStatus`), sem frameworks
+- **application**: casos de uso, portas e paginação
+- **infrastructure**: adaptadores web, persistência em memória, integrações simuladas e observabilidade
 
-## 🚀 Roteiro completo de implementação
-
-- 🚀 Roteiro completo de implementação — Passo a passo técnico ([DEPLOYMENT_JOURNEY.md](docs/DEPLOYMENT_JOURNEY.md))
+A regra de dependência é verificada pelo `ArchitectureTest` (ArchUnit). Fluxo de uma requisição: [ARCHITECTURE_DIAGRAM.txt](docs/ARCHITECTURE_DIAGRAM.txt).
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 
 - Java 21 ou superior
-- Maven 3.8.1 ou superior (ou usar `./mvnw`)
+- Maven 3.9 ou superior
 
-### Compilar
+### Compilar e testar
 
 ```bash
 cd application
-./mvnw clean compile
+mvn clean package
 ```
 
-### Executar Testes
+### Iniciar a aplicação
 
 ```bash
-./mvnw clean test
+java -jar pedidos/target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
-### Iniciar a Aplicação
-
-```bash
-./mvnw spring-boot:run -f pedidos-infrastructure
-```
-
-A aplicação estará disponível em `http://localhost:8080`.
+A aplicação estará disponível em `http://localhost:8080`. Por padrão nada é enviado para fora (Pushgateway e Jaeger desligados); para usar a stack SRE, copie `application/pedidos/.env.example` para `.env` e preencha o host. Variáveis em [OBSERVABILITY.md](docs/OBSERVABILITY.md#configuração-da-aplicação).
 
 ### Acessar a Documentação Swagger UI
 
@@ -57,18 +49,18 @@ http://localhost:8080/swagger-ui.html
 |--------|----------|-----------|
 | POST | `/api/v1/orders` | Criar pedido |
 | GET | `/api/v1/orders/{orderId}` | Obter pedido |
-| GET | `/api/v1/orders` | Listar pedidos (com filtros opcionais) |
-| PATCH | `/api/v1/orders/{orderId}/status` | Atualizar status |
+| GET | `/api/v1/orders` | Listar pedidos, mais recentes primeiro: filtros `customerId`, `status`; paginação `page` (a partir de 1) e `size` (padrão 20, máx. 100); resposta `{data, pagination}` |
+| PATCH | `/api/v1/orders/{orderId}/status` | Atualizar status (transição inválida, inclusive voltar a `PENDING`: 422) |
+
+Erros seguem RFC 7807 (`ProblemDetail`): 400 validação, 404 pedido inexistente, 405 método não suportado, 422 regra de negócio, 503 dependência indisponível (timeout em `APP_DEPENDENCIES_TIMEOUT`, padrão 2s).
 
 📖 **Documentação completa**: Swagger UI em `http://localhost:8080/swagger-ui.html`
 
 ## 📊 Observabilidade
 
-- **Métricas**: Prometheus em `/actuator/prometheus`
-- **Traces**: OpenTelemetry + Jaeger
-- **Logs**: Estruturados com SLF4J
-
-📄 **Guia completo de métricas**: [METRICS.md](METRICS.md)
+- **Métricas**: `/actuator/prometheus` e envio nativo ao Pushgateway; dashboard Grafana e alertas em `sre/` → [OBSERVABILITY.md](docs/OBSERVABILITY.md)
+- **Traces**: OpenTelemetry → Jaeger, com spans das chamadas paralelas → [TRACING.md](docs/TRACING.md)
+- **Logs**: JSON ECS no stdout, com `traceId`/`spanId`, sem dados pessoais nem valores
 
 ## 🤖 Governança de IA no Pull Request
 
@@ -98,24 +90,24 @@ Todo PR passa pelo workflow **AI Governance Pipeline** ([ai-governance.yml](.git
 
 | Documento | Descrição |
 |-----------|-----------|
-| [DEPLOYMENT_JOURNEY.md](docs/DEPLOYMENT_JOURNEY.md) | 🚀 **Roteiro completo de implementação** — Passo a passo técnico |
-| [METRICS.md](docs/METRICS.md) | 📊 Guia completo de métricas e queries Grafana |
-| [QUICK_START_METRICS.md](docs/QUICK_START_METRICS.md) | ⚡ Como testar métricas localmente |
-| [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | ✅ Status de implementação |
-| [ARCHITECTURE_DIAGRAM.txt](docs/ARCHITECTURE_DIAGRAM.txt) | 🏗️ Diagrama da arquitetura |
-| [IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) | 📝 Notas técnicas |
+| [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 📊 Métricas, Pushgateway, dashboard, alertas e teste ponta a ponta |
+| [TRACING.md](docs/TRACING.md) | 🔎 Traces e correlação com logs |
+| [ARCHITECTURE_DIAGRAM.txt](docs/ARCHITECTURE_DIAGRAM.txt) | 🏗️ Fluxo de uma requisição pelas camadas |
 | [ADR-001](docs/adr/ADR-001-pipeline-governanca-ia.md) | 🤖 Pipeline de Governança de IA para revisão de PRs |
+| [ADR-002](docs/adr/ADR-002-correcoes-auditoria-skills.md) | 🛠️ Correções da auditoria das skills (métricas, logs, API, tracing) |
+| [docs/](docs/README.md) | 📚 Índice completo, publicações e arquivo histórico |
 
 ## ✅ Implementado
 
 - Arquitetura Hexagonal + DDD
 - Virtual Threads no Tomcat
 - Paralelização com CompletableFuture
-- Testes: Unit + Integration + Architecture
-- OpenAPI/Swagger UI
-- Métricas Prometheus (MeterBinder pattern)
-- OpenTelemetry para tracing
-- Logging estruturado
+- Testes: domínio, casos de uso, contrato HTTP (MockMvc), arquitetura (ArchUnit) e métricas; ainda sem teste de integração com Testcontainers (o repositório é em memória)
+- OpenAPI/Swagger UI, listagem paginada
+- Métricas Micrometer com envio nativo ao Pushgateway, incluindo threads virtuais (`micrometer-java21`)
+- Tracing OpenTelemetry com propagação de contexto para as threads virtuais
+- Logs estruturados ECS sem PII
+- Timeout nas dependências e transições de status atômicas
 - Governança de IA no PR (arquitetura, qualidade e LGPD) via GitHub Actions
 
 ## 👨‍💻 Autor
