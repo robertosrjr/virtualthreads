@@ -1,84 +1,98 @@
-# LGPD-SRE Compliance and Sanitization Skill (SKILL.md)
+# LGPD-SRE Compliance: auditoria e mascaramento de dados pessoais
 
-This skill provides the `lgpd-sre-compliance-auditor` agent with the operational procedures, regulatory alignments (Lei 13.709/2018), and programmatic templates necessary to identify, mask, and audit personal data (PII) exposure in logs, tracing pipelines, and SRE environments.
+Procedimentos, alinhamento regulatório (Lei 13.709/2018) e o **modelo único de mascaramento** do projeto para identificar, mascarar e auditar exposição de dados pessoais (PII) em logs, traces, métricas e ambientes SRE.
 
-## 1. Regulatory Context and Alignment
+> Esta é a fonte única de mascaramento de PII. `CLAUDE.md`, `spring-logging-skill` e os agentes apontam para cá; não duplique o código em outros arquivos.
 
-We align system operations with key principles of the **Brazilian General Data Protection Law (LGPD)**:
-*   **Art. 6º, III (Minimização):** Telemetry must only ingest, process, and retain the absolute minimum metadata required for system reliability. No arbitrary user payloads should reside in telemetry indices.
-*   **Art. 6º, VII (Segurança):** System logs, tracing spans, and operational backups must be structured securely, ensuring confidentiality and integrity against unauthorized leaks.
-*   **Art. 46 (Medidas de Segurança e Prevenção):** Operational environments must prevent access to raw user PII during crisis response (Incident Response / postmortems).
+## 1. Alinhamento regulatório
 
----
+- **Art. 6º, III (Minimização):** a telemetria ingere e retém apenas o mínimo de metadados necessário à confiabilidade. Nenhum payload de usuário nos índices de telemetria.
+- **Art. 6º, VII (Segurança):** logs, spans e backups operacionais são estruturados e protegidos contra vazamento.
+- **Art. 46 (Medidas de segurança e prevenção):** o ambiente operacional impede acesso a PII bruto durante resposta a incidentes e postmortems.
 
-## 2. Step-by-Step Compliance & Security Audit Workflow
+## 2. Workflow de auditoria
 
-When auditing a repository or log stream, follow this workflow:
+### Passo 1: detectar PII e exposição
+- Procure variáveis ou chaves como `cpf`, `email`, `phone`, `telefone`, `password`, `card`, `token`, `address`, `endereco`, `ip_address`, `username`.
+- Localize chamadas de log, atributos de span e tags de métrica que registram esses valores diretamente (ex.: `logger.info("Usuario: " + cpf)`).
 
-### Step 1: Detect PII and Security Exposure
-*   Actively look for variables or keys named: `cpf`, `email`, `phone`, `telefone`, `password`, `card`, `token`, `address`, `endereco`, `ip_address`, `username`.
-*   Locate any raw outputs or logger calls registering these parameters directly (e.g., `logger.info(f"User: {email}")`).
+### Passo 2: avaliar a sanitização
+- Verifique se existe camada de sanitização na origem (utilitário, interceptor, filtro de log).
+- Sem ela, registre uma lacuna de conformidade de severidade alta.
 
-### Step 2: Evaluate Sanitization Mechanisms
-*   Inspect the codebase to determine if there is an active Data Scrubbing layer (middleware, interceptor, or a pipeline processor).
-*   If absent, flags this as an immediate High Severity Compliance Gap.
+### Passo 3: mascarar na origem
+- Minimize primeiro: se o dado não tem valor diagnóstico, não o registre.
+- Quando precisar manter uma forma derivada, aplique a tabela da seção 3 antes de escrever o log.
 
-### Step 3: Implement Masking and Redaction
-*   Inject dynamic redactors (masking algorithms) to replace sensitive strings before writing.
-*   Format masks to preserve debug value while obfuscating identity (e.g., `user@domain.com` -> `u***@domain.com`, `123.456.789-10` -> `***.456.789-**`).
+### Passo 4: auditar o acesso operacional
+- Elimine leitura manual de logs de produção via SSH.
+- Use coleta central e imutável, com RBAC e acesso *break-glass* auditado.
 
-### Step 4: Audit SRE Access Paths
-*   Evaluate how engineers interact with production data.
-*   Recommend the elimination of manual SSH log reading in favor of a central, immutable log collection engine with Role-Based Access Control (RBAC).
+## 3. Tabela de mascaramento obrigatório
 
----
+| Dado | Formato mascarado | Exemplo |
+|---|---|---|
+| CPF | Apenas o último grupo e os dígitos verificadores | `123.456.789-10` → `***.***.789-10` |
+| E-mail | Primeira e última letra do usuário; domínio preservado | `joana.silva@empresa.com.br` → `j***a@empresa.com.br` |
+| Cartão | Apenas os 4 primeiros e os 4 últimos dígitos | `4111 1111 1111 1111` → `4111-XXXX-XXXX-1111` |
+| Telefone | Apenas os 4 últimos dígitos | `(11) 98765-4321` → `(**) *****-4321` |
+| Senha, token, chave de API | Nunca registrar, nem mascarado | — |
 
-## 3. Reference Implementation: Masking Processor Template
+CPF sem pontuação (11 dígitos seguidos) também é mascarado. Um telefone de 11 dígitos sem pontuação cai na regra de CPF, o que continua ocultando o número.
 
-### Python Logging Masking Filter (Few-Shot)
+## 4. Implementação de referência (Java)
 
-```python
-import re
-import logging
+Testado com os exemplos da tabela acima. Nunca devolve `null`.
 
-class LGPDPIIMaskFilter(logging.Filter):
-    # Regex definitions for Brazilian CPF and typical E-mails
-    CPF_REGEX = re.compile(r'\b\d{3}\.\d{3}\.\d{3}-\d{2}\b|\b\d{11}\b')
-    EMAIL_REGEX = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+```java
+import java.util.Objects;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-    def filter(self, record):
-        if isinstance(record.msg, str):
-            record.msg = self.mask_data(record.msg)
-        return True
+public final class LogSanitizer {
 
-    def mask_data(self, text):
-        # Mask CPF preserving only middle digits for debugging alignment
-        text = self.CPF_REGEX.sub(lambda m: self._mask_cpf(m.group(0)), text)
-        # Mask Email preserving domain
-        text = self.EMAIL_REGEX.sub(lambda m: self._mask_email(m.group(0)), text)
-        return text
+    private static final Pattern CARD =
+        Pattern.compile("\\b(\\d{4})[- ]?\\d{4}[- ]?\\d{4}[- ]?(\\d{4})\\b");
+    private static final Pattern CPF =
+        Pattern.compile("\\b\\d{3}\\.?\\d{3}\\.?(\\d{3})-?(\\d{2})\\b");
+    private static final Pattern PHONE =
+        Pattern.compile("\\(\\d{2}\\)\\s?\\d{4,5}-(\\d{4})");
+    private static final Pattern EMAIL = Pattern.compile(
+        "\\b([A-Za-z0-9])(?:[A-Za-z0-9._%+-]*([A-Za-z0-9]))?(@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})\\b");
 
-    def _mask_cpf(self, cpf):
-        clean = re.sub(r'\D', '', cpf)
-        if len(clean) == 11:
-            return f"***.{clean[3:6]}.{clean[6:9]}-**"
-        return "[MASKED_CPF]"
+    private LogSanitizer() {
+    }
 
-    def _mask_email(self, email):
-        parts = email.split('@')
-        if len(parts) == 2:
-            local, domain = parts
-            masked_local = local[0] + "*" * (len(local) - 1) if len(local) > 1 else "*"
-            return f"{masked_local}@{domain}"
-        return "[MASKED_EMAIL]"
+    public static String sanitize(String message) {
+        if (message == null) {
+            return "";
+        }
+        String masked = CARD.matcher(message).replaceAll("$1-XXXX-XXXX-$2");
+        masked = CPF.matcher(masked).replaceAll("***.***.$1-$2");
+        masked = PHONE.matcher(masked).replaceAll("(**) *****-$1");
+        return EMAIL.matcher(masked).replaceAll(LogSanitizer::maskEmail);
+    }
 
-# Application Example
-logger = logging.getLogger("secure-app")
-handler = logging.StreamHandler()
-handler.addFilter(LGPDPIIMaskFilter())
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+    private static String maskEmail(MatchResult m) {
+        String masked = m.group(1) + "***" + Objects.toString(m.group(2), "") + m.group(3);
+        return Matcher.quoteReplacement(masked);
+    }
+}
+```
 
-# Will output: "Processando dados do usuario: a*****@empresa.com com CPF: ***.456.789-**"
-logger.info("Processando dados do usuario: alberto@empresa.com com CPF: 123.456.789-10")
+Cuidados ao alterar:
+- A ordem importa: cartão antes de CPF, para que 16 dígitos não sejam lidos como CPF.
+- Toda referência `$n` na substituição precisa de um grupo de captura correspondente no regex; senão, `replaceAll` lança `IndexOutOfBoundsException` em tempo de execução.
+- Use o sanitizador como rede de proteção. A regra principal continua sendo não passar PII ao logger.
+
+```java
+// ✅ Evento sem PII; se um identificador for indispensável, mascare na origem
+logger.atInfo()
+    .addKeyValue("pedido_id", pedidoId)
+    .addKeyValue("cliente_cpf", LogSanitizer.sanitize(cpf))
+    .log("Pedido criado");
+
+// ❌ PII concatenado na mensagem
+logger.info("Pedido criado para cpf=" + cpf + " email=" + email);
 ```

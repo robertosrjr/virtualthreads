@@ -1,8 +1,3 @@
----
-name: tagf-service-modeling-skill
-description: Fornece diretrizes e técnicas especializadas para modelagem na Arquitetura de Negócios do TOGAF, com foco na diferenciação conceitual e prática entre Serviço de Negócio (Business Service) e Oferta de Serviço (Service Offer). Ative quando o usuário solicitar ajuda para modelar serviços, definir ofertas, mapear valor organizacional ou estruturar arquitetura de negócios seguindo o TAGF.
----
-
 # Skill: Modelagem de Serviços e Ofertas na Arquitetura de Negócios (TAGF)
 
 Este documento de habilidade instrui o agente sobre como mapear, documentar, analisar e diferenciar **Serviços de Negócio (Business Services)** e **Ofertas de Serviço (Service Offers)** com base no framework TAGF.
@@ -37,7 +32,7 @@ Na Arquitetura de Negócios da organização, Serviço de Negócio e Oferta de S
 
 ## 3. Estrutura de Saída Exigida do Agente
 
-Para garantir que cada subagente atue de forma focada, previsível e produza saídas que possam ser integradas sem ruído na conversa principal, o agente deve obrigatoriamente estruturar suas respostas em **quatro seções claras**:
+Para que a resposta seja focada e previsível, o agente deve obrigatoriamente estruturar suas respostas em **quatro seções claras**:
 
 ### 1. Contexto Estratégico & Objetivo de Negócio
 * Identifique brevemente o problema de negócio que está sendo resolvido e quem é o stakeholder/beneficiário final do valor.

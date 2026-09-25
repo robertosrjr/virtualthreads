@@ -1,8 +1,3 @@
----
-name: tech-documentation-skill
-description: Diretrizes de formatação e escrita para Documentação Técnica de Software (ADRs, DDAs, READMEs). Use ao criar registros de decisão arquitetural (ADR), documentos de design detalhado (DDA) ou documentação estruturada de sistemas.
----
-
 # Habilidade de Documentação Técnica de Software
 
 Esta habilidade instrui o agente a produzir documentações técnicas de software (ADRs, DDAs, READMEs e Manuais Técnicos) seguindo padrões consolidados de engenharia de software e redação técnica.
@@ -11,11 +6,11 @@ Esta habilidade instrui o agente a produzir documentações técnicas de softwar
 
 ## 1. Diretrizes de Escrita e Formatação
 
-Para garantir que o subagente trabalhe de forma focada, previsível e sem estourar a janela de contexto principal, aplique as seguintes regras de formatação e estrutura:
+Para uma documentação focada e previsível, aplique as seguintes regras de formatação e estrutura:
 
 1. **Foco na Clareza e Concisão**: A documentação deve servir como ferramenta de alinhamento para o time (*Whole Team Approach*). Cada seção deve ter um objetivo direto.
 2. **Uso de Markdown Limpo**: Utilize cabeçalhos bem aninhados (`#`, `##`, `###`), blocos de código com a linguagem especificada (ex: ````python) e diagramas conceituais em texto utilizando sintaxe **Mermaid** sempre que for ilustrar fluxos.
-3. **Ponto de Parada Natural (Saída Estruturada)**: O subagente sabe que terminou sua execução assim que preencher as seções obrigatórias do template escolhido, retornando um resumo limpo à thread principal sem ruídos intermediários de busca.
+3. **Ponto de Parada Natural (Saída Estruturada)**: o trabalho termina quando as seções obrigatórias do template escolhido estão preenchidas.
 
 ---
 
@@ -67,9 +62,9 @@ Indique como esta feature será testada conforme os Quadrantes do Teste Ágil:
 
 ---
 
-## 3. Formato de Saída Exigido do Subagente
+## 3. Formato de Saída Exigido
 
-Para que a thread principal receba o valor direto sem ruídos de busca intermediária, o relatório final do subagente deve seguir esta estrutura estrita:
+A entrega final segue esta estrutura:
 
 1. **Sumário Executivo**: Resumo de 2-3 sentenças do que o documento aborda e quais fontes de código/requisitos o moldaram.
 2. **O Documento Gerado**: O Markdown completo formatado de acordo com o template de ADR, DDA ou README especificado.

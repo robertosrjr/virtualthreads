@@ -148,6 +148,13 @@ Accept: application/vnd.exemplo.v1+json
 </dependency>
 ```
 
+Para stack reativa, use `springdoc-openapi-starter-webflux-ui`.
+
+### Regras de Documentação
+- Toda controller pública tem `@Tag`, `@Operation` e `@ApiResponse`.
+- DTOs de request/response documentados com `@Schema(description = ...)`.
+- A especificação é versionada junto com a API (mesma estratégia de versionamento).
+
 ### Anotações Essenciais
 ```java
 @Tag(name = "Orders", description = "Gerenciamento de pedidos")
@@ -198,5 +205,3 @@ public record OrderResponse(
 2. **Aplicação**: Sugerir ajustes conforme padrões
 3. **Implementação**: Código com anotações e configuração
 4. **Documentação**: OpenAPI/Swagger pronto
-
-Veja também: [docs/architecture/api-conventions.md](../../docs/architecture/api-conventions.md)

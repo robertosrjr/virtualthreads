@@ -1,8 +1,3 @@
----
-name: quality-assurance-skills
-description: Fornece diretrizes e técnicas para Engenharia de Qualidade de Software (QA) moderna. Ative quando o usuário solicitar planejamento de testes, criação de scripts de automação (Cypress, Selenium, Appium), testes de API (Postman, Insomnia), consultas de banco de dados SQL ou automação de pipelines de CI/CD em contextos ágeis.
----
-
 # Quality Assurance Skills (Habilidades Modernas de QA)
 
 Esta habilidade ensina o Claude a agir como um Engenheiro de Qualidade de Software moderno e estratégico. Ela integra competências técnicas (Hard Skills) e comportamentais (Soft Skills) baseadas no Manifesto do Teste Ágil e na metodologia da CESAR School.
@@ -57,7 +52,7 @@ Organize e balanceie a estratégia de testes mapeando as atividades em quatro ca
 
 ---
 
-## 4. Estrutura de Saída Esperada (Subagentes Eficazes)
+## 4. Estrutura de Saída Esperada
 
 Sempre que esta habilidade for ativada para resolver um desafio ou analisar um cenário de teste, sua resposta deve seguir uma estrutura previsível e focada:
 

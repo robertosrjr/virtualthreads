@@ -1,5 +1,5 @@
 ---
-name: spring-tracing
+name: spring-tracing-skill
 description: "Use when implementing or reviewing Micrometer Tracing, OpenTelemetry, OTLP export, W3C trace context, Observation spans, HTTP client propagation, or trace-log correlation in Java/Spring."
 ---
 
@@ -23,7 +23,7 @@ Use this skill for distributed tracing and operation spans. Prefer Micrometer Ob
 - Make sampling configurable by environment.
 - Treat the OTLP collector as optional for local tests.
 - Do not duplicate HTTP server instrumentation already supplied by Spring Boot.
-- Coordinate log fields with `spring-logging` and privacy review with `lgpd-sre-compliance`.
+- Coordinate log fields with `spring-logging-skill` and privacy review with `lgpd-sre-compliance-skill`.
 
 ## Reference
 

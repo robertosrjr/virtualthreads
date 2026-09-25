@@ -1,5 +1,5 @@
 ---
-name: resilience-checker
+name: resilience-checker-skill
 description: "Use when reviewing or implementing resilience in Java/Spring, including idempotency, retries, timeouts, circuit breakers, rate limiting, bulkheads, fallbacks, caching, or failure handling."
 ---
 
@@ -24,7 +24,7 @@ Use this skill to identify failure boundaries and apply only the resilience patt
 - Do not add Circuit Breaker without a dependency that can fail independently.
 - Bound local state and queues.
 - Document whether protection is process-local or distributed.
-- Coordinate metrics/logs with the observability skills and privacy with `lgpd-sre-compliance`.
+- Coordinate metrics/logs with the observability skills and privacy with `lgpd-sre-compliance-skill`.
 
 ## Reference
 

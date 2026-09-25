@@ -1,5 +1,5 @@
 ---
-name: lgpd-sre-compliance
+name: lgpd-sre-compliance-skill
 description: "Use when auditing or implementing LGPD privacy controls for Java/Spring applications, including telemetry minimization, PII redaction, retention, backups, access control, and least privilege."
 ---
 

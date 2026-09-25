@@ -1,6 +1,6 @@
 ---
-name: quality-assurance
-description: "Use when planning a test strategy, writing automation scripts (Cypress, Selenium, Appium), API tests (Postman/Insomnia), SQL data-validation queries, or CI/CD test pipelines in an agile QA context."
+name: quality-assurance-skills
+description: "Use for QA-level strategy and automation: mapping coverage onto the Agile Testing Quadrants, UI/E2E scripts (Cypress, Selenium, Appium), API contract tests (Postman/Insomnia), SQL data-validation queries, or CI/CD test gating. For developer-level TDD, unit/integration tests and ArchUnit, use testing-strategy-guidance."
 ---
 
 # Quality Assurance

@@ -281,7 +281,7 @@ Cada agente referencia as skills correspondentes:
 ### Problema: Dúvida sobre recomendação
 **Solução**: Consultar CLAUDE.md ou skill correspondente
 ```
-Ver: .claude/CLAUDE.md - Segurança e Privacidade
+Ver: .claude/CLAUDE.md - Regras invioláveis por tema
 Ver: .claude/skills/lgpd-sre-compliance-skill/
 ```
 

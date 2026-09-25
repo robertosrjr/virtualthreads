@@ -1,5 +1,5 @@
 ---
-name: sre-observability
+name: sre-observability-skill
 description: "Use when reviewing end-to-end SRE observability across structured logs, latency, traffic, errors, saturation, distributed tracing, SLO evidence, and telemetry privacy."
 ---
 
@@ -23,7 +23,7 @@ Use this skill as the coordinating review for logs, metrics, traces, and operati
 - Prefer stable names and low-cardinality dimensions.
 - Never add payloads or personal data to telemetry for convenience.
 - Avoid duplicate instrumentation supplied by the framework.
-- Use `spring-logging`, `spring-metrics`, `spring-tracing`, `resilience-checker`, and `lgpd-sre-compliance` for specialist decisions.
+- Use `spring-logging-skill`, `spring-metrics-skill`, `spring-tracing-skill`, `resilience-checker-skill`, and `lgpd-sre-compliance-skill` for specialist decisions.
 
 ## Reference
 

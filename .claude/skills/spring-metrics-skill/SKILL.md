@@ -1,5 +1,5 @@
 ---
-name: spring-metrics
+name: spring-metrics-skill
 description: "Use when designing or implementing Micrometer metrics in Java/Spring, including Counters, Gauges, Timers, Actuator exposure, JVM metrics, business metrics, or cardinality controls. Do not use for log format or trace propagation design."
 ---
 
@@ -23,7 +23,7 @@ Use this skill for Micrometer and Spring Boot Actuator instrumentation. Define m
 - Avoid duplicate custom meters for signals already provided by Spring Boot.
 - Document whether a gauge is process-local, in-memory, or backed by durable storage.
 - Do not create a metric solely because a field exists; it must support diagnosis or an SLO.
-- Defer logs to `spring-logging` and trace propagation to `spring-tracing`.
+- Defer logs to `spring-logging-skill` and trace propagation to `spring-tracing-skill`.
 
 ## Reference
 

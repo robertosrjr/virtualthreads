@@ -1,6 +1,6 @@
-# SKILL: Spring Boot 4.1.1 Metrics Integration (Micrometer & Java 21)
+# Spring Boot 4.1.1: métricas com Micrometer (Java 21)
 
-Esta skill fornece padrões, diretrizes e códigos de referência para guiar o `spring-metrics-specialist` no registro, customização e otimização de métricas do sistema utilizando Micrometer e Spring Boot Actuator 4.1.1.
+Padrões, diretrizes e código de referência para o registro, customização e otimização de métricas do sistema utilizando Micrometer e Spring Boot Actuator 4.1.1.
 
 ## 1. Habilitação de Métricas JVM (Java 21 Virtual Threads)
 
