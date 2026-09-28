@@ -3,6 +3,9 @@ package com.robertosrjr.pedidos.domain.model;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public record OrderItem(UUID productId, String productName, int quantity, Money unitPrice) {
 	public OrderItem {
 		Objects.requireNonNull(productId, "Product ID cannot be null");
