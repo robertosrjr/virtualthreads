@@ -1,0 +1,1 @@
+Teste do gate de deploy: commit que nunca passou por PR.
