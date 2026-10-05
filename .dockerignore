@@ -1,0 +1,12 @@
+# Só o que o Dockerfile copia precisa entrar no contexto de build.
+**/target
+.git
+.github
+.claude
+# Endereços de infraestrutura por ambiente: nunca podem ir para dentro da imagem
+**/.env
+**/.env.*
+sre/
+docs/
+scripts/
+application/scripts/

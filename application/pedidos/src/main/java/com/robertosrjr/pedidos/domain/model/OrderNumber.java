@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 /** Número do pedido exibido ao cliente: PED- seguido de 8 dígitos. */
 public record OrderNumber(String value) {
 
-    private static final Pattern FORMAT = Pattern.compile("PED-\d{8}");
+    private static final Pattern FORMAT = Pattern.compile("PED-\\d{8}");
 
     public OrderNumber {
         Objects.requireNonNull(value, "value");

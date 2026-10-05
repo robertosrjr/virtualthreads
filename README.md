@@ -52,7 +52,7 @@ http://localhost:8080/swagger-ui.html
 | GET | `/api/v1/orders` | Listar pedidos, mais recentes primeiro: filtros `customerId`, `status`; paginação `page` (a partir de 1) e `size` (padrão 20, máx. 100); resposta `{data, pagination}` |
 | PATCH | `/api/v1/orders/{orderId}/status` | Atualizar status (transição inválida, inclusive voltar a `PENDING`: 422) |
 
-Erros seguem RFC 7807 (`ProblemDetail`): 400 validação, 404 pedido inexistente, 405 método não suportado, 422 regra de negócio, 503 dependência indisponível (timeout em `APP_DEPENDENCIES_TIMEOUT`, padrão 2s).
+Erros seguem RFC 7807 (`ProblemDetail`): 400 validação, 404 pedido inexistente, 405 método não suportado, 422 regra de negócio (pedido sem itens, moedas diferentes, transição inválida), 503 dependência indisponível (timeout em `APP_DEPENDENCIES_TIMEOUT`, padrão 2s).
 
 📖 **Documentação completa**: Swagger UI em `http://localhost:8080/swagger-ui.html`
 
@@ -64,32 +64,32 @@ Erros seguem RFC 7807 (`ProblemDetail`): 400 validação, 404 pedido inexistente
 
 ## 🤖 Governança de IA no Pull Request
 
-Todo PR passa pelo workflow **AI Governance Pipeline** ([ai-governance.yml](.github/workflows/ai-governance.yml)). Ele executa os agentes de [`.claude/agents/`](.claude/agents/) sobre o diff usando o Gemini e **bloqueia o merge** quando encontra uma violação `CRITICAL`.
+Todo PR passa pelo workflow [governance.yml](.github/workflows/governance.yml), que chama o workflow reutilizável `governance-required.yml@v1.9.0` do repositório central **`robertosrjr/governance-policies`**. As políticas e os auditores (arquitetura, qualidade, LGPD e segurança de IA) ficam nesse repositório, e o workflow **bloqueia o merge** quando encontra uma violação crítica.
 
-| Agente | O que bloqueia |
-|--------|----------------|
-| `architecture-auditor` | `domain`/`application` dependendo de `infrastructure` ou de frameworks |
-| `code-quality-auditor` | Violações de regras invioláveis (SOLID, Clean Code) |
-| `lgpd-sre-compliance` | Dado pessoal ou credencial em logs, traces, métricas, código ou configuração |
-
-- **Arquivos analisados**: `*.java`, `*.gradle`, `*.kts`, `pom.xml`, `*.yml`, `*.yaml`, `*.properties`, `logback*.xml`
-- **Resultado**: comentário no PR, Job Summary do Actions e check `ai-review` (✅/❌)
-- **Fail-closed**: se um agente falhar (API, modelo, cota), o PR é bloqueado
+- **Fail-closed**: se a análise falhar (API, modelo, cota), o PR é bloqueado
+- **Segredos**: só as chaves do projeto são repassadas ao workflow central, nunca `secrets: inherit`
+- **Gate de deploy**: em push na `main`, o [deploy.yml](.github/workflows/deploy.yml) só faz o deploy depois do job `governance-gate` (`governance-deploy-gate.yml@v1.9.0`)
+- **Autoproteção**: o [CODEOWNERS](.github/CODEOWNERS) exige aprovação do dono em `.github/`, `.claude/` e demais arquivos de CI e de assistentes de IA
+- **Revisão local**: os agentes de [`.claude/agents/`](.claude/agents/) cobrem os mesmos temas e podem ser usados no Claude Code antes do PR
 
 ### Configuração
 
 | Item | Onde | Obrigatório |
 |------|------|-------------|
-| `GEMINI_API_KEY` | Settings → Secrets and variables → Actions → **Repository secrets** | Sim |
-| `GEMINI_MODEL` | Settings → Secrets and variables → Actions → **Variables** | Não (padrão definido no [orchestrator.py](.github/scripts/orchestrator.py)) |
-| Check `ai-review` obrigatório | Settings → Rules → Rulesets (branch `main`) | Sim, para bloquear o merge |
+| `VIRTUALTHREADS_OR_API_KEY` (repassado como `OPENROUTER_API_KEY`) | Settings → Secrets and variables → Actions → **Repository secrets** | Sim |
+| `VIRTUALTHREADS_JEV_API_KEY` (repassado como `TYPESAFE_API_KEY`) | Settings → Secrets and variables → Actions → **Repository secrets** | Sim |
+| Check `governance / governance` obrigatório | Settings → Rules → Rulesets (branch `main`) | Sim, para bloquear o merge |
+| "Require review from Code Owners" | Ruleset do branch `main` | Sim, para proteger os arquivos de CI e IA |
 
-📄 **Decisão e trade-offs**: [ADR-001](docs/adr/ADR-001-pipeline-governanca-ia.md)
+Ao atualizar a versão da governança, mantenha iguais a ref do `uses:` e o `governance_ref` nos dois workflows.
+
+📄 **Decisão e trade-offs**: [ADR-001](docs/adr/ADR-001-pipeline-governanca-ia.md) (versão original, com Gemini; o desenho atual centralizou o pipeline a partir da v1.1.0)
 
 ## 📚 Documentação
 
 | Documento | Descrição |
 |-----------|-----------|
+| [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 🧭 Visão geral completa do projeto (contexto para pessoas e ferramentas de IA) |
 | [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 📊 Métricas, Pushgateway, dashboard, alertas e teste ponta a ponta |
 | [TRACING.md](docs/TRACING.md) | 🔎 Traces e correlação com logs |
 | [ARCHITECTURE_DIAGRAM.txt](docs/ARCHITECTURE_DIAGRAM.txt) | 🏗️ Fluxo de uma requisição pelas camadas |
@@ -108,7 +108,7 @@ Todo PR passa pelo workflow **AI Governance Pipeline** ([ai-governance.yml](.git
 - Tracing OpenTelemetry com propagação de contexto para as threads virtuais
 - Logs estruturados ECS sem PII
 - Timeout nas dependências e transições de status atômicas
-- Governança de IA no PR (arquitetura, qualidade e LGPD) via GitHub Actions
+- Governança de IA no PR e gate de deploy via workflow central versionado (GitHub Actions)
 
 ## 👨‍💻 Autor
 

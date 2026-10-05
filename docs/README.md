@@ -6,6 +6,7 @@ Visão geral, execução e endpoints: [README principal](../README.md).
 
 | Documento | Conteúdo |
 |-----------|----------|
+| [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) | Visão geral: o que é, o que faz, arquitetura, observabilidade, governança e limitações |
 | [OBSERVABILITY.md](OBSERVABILITY.md) | Métricas (catálogo e consultas), Pushgateway, dashboard, alertas e teste ponta a ponta |
 | [TRACING.md](TRACING.md) | Traces, spans das chamadas paralelas e correlação com os logs |
 | [ARCHITECTURE_DIAGRAM.txt](ARCHITECTURE_DIAGRAM.txt) | Fluxo de uma requisição pelas camadas e threads virtuais |
