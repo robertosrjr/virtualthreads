@@ -2,6 +2,7 @@ package com.robertosrjr.pedidos.domain.model;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import org.springframework.web.bind.annotation.*;
 
 public record Money(BigDecimal amount, String currency) {
 	public Money {
