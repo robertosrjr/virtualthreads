@@ -19,9 +19,9 @@ permissions:
 
 jobs:
   governance:
-    uses: robertosrjr/governance-policies/.github/workflows/governance-required.yml@44f70a643467a4168b2591e9f445ce87fdcb403c
+    uses: robertosrjr/governance-policies/.github/workflows/governance-required.yml@v1.12.0
     with:
-      governance_ref: 44f70a643467a4168b2591e9f445ce87fdcb403c
+      governance_ref: v1.12.0
     # Repasse só a chave do projeto (nunca `secrets: inherit`, que entrega todos os
     # segredos do repositório ao workflow central). O nome à direita é o do seu segredo.
     secrets:
